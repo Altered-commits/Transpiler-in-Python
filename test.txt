@@ -1,0 +1,11 @@
+include Math.MathDefs
+
+define PI_E PI / E
+
+var a = PI_E;
+var b = E;
+var c = '\uFFAAB';
+
+if a == b {
+    c = c + 1;
+}

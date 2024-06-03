@@ -1,0 +1,64 @@
+<mxfile host="app.diagrams.net" modified="2024-05-19T12:43:38.492Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 OpenWave/93.4.3927.33" etag="vAfjVOZy4nwp12KvrbZx" version="24.4.4" type="device">
+  <diagram name="Page-1" id="TF0PRry378tvz2ITyngi">
+    <mxGraphModel dx="1050" dy="522" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" background="none" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="SykCjAk1sR6Utf9rGX9H-8" value="PERT Chart - Week 1" style="swimlane;startSize=20;horizontal=1;childLayout=flowLayout;flowOrientation=north;resizable=0;interRankCellSpacing=50;containerType=tree;fontSize=12;fontStyle=5" parent="1" vertex="1">
+          <mxGeometry x="30" y="40" width="790" height="315" as="geometry" />
+        </mxCell>
+        <mxCell id="SykCjAk1sR6Utf9rGX9H-9" value="&lt;b&gt;&lt;font face=&quot;Helvetica&quot;&gt;Task 1.1:&lt;/font&gt;&lt;/b&gt; Studying about Transpiler Architecture" style="whiteSpace=wrap;html=1;" parent="SykCjAk1sR6Utf9rGX9H-8" vertex="1">
+          <mxGeometry x="245" y="40" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="SykCjAk1sR6Utf9rGX9H-10" value="&lt;b&gt;Task 1.2:&lt;/b&gt; Implementing Basic Lexer" style="whiteSpace=wrap;html=1;" parent="SykCjAk1sR6Utf9rGX9H-8" vertex="1">
+          <mxGeometry x="290.06" y="140" width="209.88" height="54.5" as="geometry" />
+        </mxCell>
+        <mxCell id="SykCjAk1sR6Utf9rGX9H-11" value="" style="html=1;rounded=1;curved=0;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;startSize=6;endSize=6;noEdgeStyle=1;orthogonal=1;endArrow=oval;endFill=1;" parent="SykCjAk1sR6Utf9rGX9H-8" source="SykCjAk1sR6Utf9rGX9H-9" target="SykCjAk1sR6Utf9rGX9H-10" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="395" y="102" />
+              <mxPoint x="395" y="128" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="SykCjAk1sR6Utf9rGX9H-35" value="&lt;b&gt;Task 1.2.1:&lt;/b&gt; Lexing Arithmetic Operators" style="rounded=0;whiteSpace=wrap;html=1;" parent="SykCjAk1sR6Utf9rGX9H-8" vertex="1">
+          <mxGeometry x="20" y="244.5" width="230" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="SykCjAk1sR6Utf9rGX9H-37" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;noEdgeStyle=1;orthogonal=1;curved=1;endArrow=diamond;endFill=1;" parent="SykCjAk1sR6Utf9rGX9H-8" source="SykCjAk1sR6Utf9rGX9H-10" target="SykCjAk1sR6Utf9rGX9H-35" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="328.37333333333333" y="206.5" />
+              <mxPoint x="135" y="232.5" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="SykCjAk1sR6Utf9rGX9H-38" value="&lt;b&gt;Task 1.2.2:&lt;/b&gt; Lexing Identifiers &amp;amp; Keywords" style="rounded=0;whiteSpace=wrap;html=1;" parent="SykCjAk1sR6Utf9rGX9H-8" vertex="1">
+          <mxGeometry x="280" y="244.5" width="230" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="SykCjAk1sR6Utf9rGX9H-39" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;noEdgeStyle=1;orthogonal=1;curved=1;endArrow=diamond;endFill=1;" parent="SykCjAk1sR6Utf9rGX9H-8" source="SykCjAk1sR6Utf9rGX9H-10" target="SykCjAk1sR6Utf9rGX9H-38" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="595" y="1115" as="sourcePoint" />
+            <mxPoint x="595" y="1165" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="395" y="208.5" />
+              <mxPoint x="395" y="232.5" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="SykCjAk1sR6Utf9rGX9H-40" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&lt;b&gt;Task 1.2.3:&lt;/b&gt; Lexing Symbols&lt;/span&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="SykCjAk1sR6Utf9rGX9H-8" vertex="1">
+          <mxGeometry x="540" y="244.5" width="230" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="SykCjAk1sR6Utf9rGX9H-41" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;noEdgeStyle=1;orthogonal=1;curved=1;endArrow=diamond;endFill=1;" parent="SykCjAk1sR6Utf9rGX9H-8" source="SykCjAk1sR6Utf9rGX9H-10" target="SykCjAk1sR6Utf9rGX9H-40" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="705" y="1075" as="sourcePoint" />
+            <mxPoint x="835" y="1125" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="461.62666666666667" y="206.5" />
+              <mxPoint x="655" y="232.5" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
