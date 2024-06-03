@@ -73,7 +73,7 @@ class Emitter:
 
         #End of main function
         self.code += "\n    return 0;\n}"
-    
+
     def emitStatement(self, node) -> None:
         shouldEndWithSemic = False
         if(isinstance(node, VariableAssignNode)):
@@ -92,21 +92,36 @@ class Emitter:
             self.code += ";\n"
         shouldEndWithSemic = False
     
-    def emitIfNode(self, node) -> None:
-        self.code += f"{self.getIndentation()}if ("
-        self.emitExpression(node.ifCondition)
-        self.code += f")\n{self.getIndentation()}" "{\n"
+    def emitBlock(self, block) -> None:
+        self.code += " {\n"
         self.incIndentationLevel()
-        
-        for statement in node.ifBody:
+
+        for statement in block:
             self.emitStatement(statement)
         
         self.decIndentationLevel()
         
         self.code += f"{self.getIndentation()}" "}\n"
+    
+    def emitIfNode(self, node) -> None:
+        self.code += f"{self.getIndentation()}if ("
+        self.emitExpression(node.ifCondition)
+        self.code += f")"
 
-        #Elifs
-        # if(node.elifBlock != [])
+        self.emitBlock(node.ifBody)
+
+        #If the list isn't empty, else if exists
+        if(node.elifBlock != []):
+            for condition, body in node.elifBlock:
+                self.code += f"{self.getIndentation()}else if ("
+                self.emitExpression(condition)
+                self.code += f")"
+
+                self.emitBlock(body)
+        
+        if(node.elseBody != None):
+            self.code += f"{self.getIndentation()}else"
+            self.emitBlock(node.elseBody)
 
     def emitVariableAssignment(self, node) -> None:
         if(node.isReassignment):

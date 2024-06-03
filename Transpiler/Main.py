@@ -12,8 +12,11 @@ args = transpilerArgs.parse_args()
 
 fileContent = None
 
-with open(args.filename, "r") as inFile:
-    fileContent = inFile.readlines()
+try:
+    with open(args.filename, "r") as inFile:
+        fileContent = inFile.readlines()
+except FileNotFoundError:
+    Printer.printError("Transpiler", f"File not found to transpile: {args.filename}")
 
 preprocessor = Preprocessor.Preprocessor(fileContent)
 parser       = Parser.Parser(preprocessor.preprocess())

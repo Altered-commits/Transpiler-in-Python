@@ -1,6 +1,6 @@
 # Transpiler in Python
 
-This Python transpiler converts custom language to C code. Made as a college project by two individuals.
+This Python transpiler converts custom language to C code. Made as a college project by two `2nd-year completed` individuals.
 
 ## Features
 1. Preprocessor capable of handling `include` and `define` directives without the need for '#' symbol. Can access files within folders using '.' syntax.
@@ -21,7 +21,7 @@ To use the transpiler, follow these steps:
 3. **Run the Transpiler**: Navigate to the directory containing the source code and run the transpiler using the following command:
 
    ```bash
-   python Main.py filename.txt
+   python Transpiler/Main.py filename.txt
 Replace the filename.txt with name of the input file you want to transpile.
 
 # Example
@@ -33,7 +33,7 @@ var x = 10;
 var y = -10;
 x = y;
 ```
-When transpiled using command `python Main.py intput.txt`, it generates a `Generated.c` file containing C code with proper type deduction.
+When transpiled using command `python Transpiler/Main.py intput.txt`, it generates a `Generated.c` file containing C code with proper type deduction.
 
 ### Generated.c
 ```c
