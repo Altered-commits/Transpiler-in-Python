@@ -6,12 +6,7 @@ var a = PI_E;
 var b = E;
 var c = '\uFFAA';
 
-if a == b {
-    c = c + 1;
-}
-elif b == c {
-    c = c + 2;
-}
-else {
-    c = c + 3;
+while b == c
+{
+    a = b - a;
 }

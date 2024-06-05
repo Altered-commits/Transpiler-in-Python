@@ -1,4 +1,4 @@
-from Node import ValueNode, BinaryOperationNode, UnaryOperationNode, VariableAssignNode, VariableAccessNode, IfNode
+from Node import ValueNode, BinaryOperationNode, UnaryOperationNode, VariableAssignNode, VariableAccessNode, IfNode, WhileNode
 from EvalTypes import evalTypeToString
 from Printer import printError
 from Token import tokenOperatorsToString
@@ -81,6 +81,8 @@ class Emitter:
             self.emitVariableAssignment(node)
         elif(isinstance(node, IfNode)):
             self.emitIfNode(node)
+        elif(isinstance(node, WhileNode)):
+            self.emitWhileNode(node)
         #Expression
         else:
             shouldEndWithSemic = True
@@ -106,7 +108,7 @@ class Emitter:
     def emitIfNode(self, node) -> None:
         self.code += f"{self.getIndentation()}if ("
         self.emitExpression(node.ifCondition)
-        self.code += f")"
+        self.code += ")"
 
         self.emitBlock(node.ifBody)
 
@@ -115,13 +117,19 @@ class Emitter:
             for condition, body in node.elifBlock:
                 self.code += f"{self.getIndentation()}else if ("
                 self.emitExpression(condition)
-                self.code += f")"
+                self.code += ")"
 
                 self.emitBlock(body)
         
         if(node.elseBody != None):
             self.code += f"{self.getIndentation()}else"
             self.emitBlock(node.elseBody)
+
+    def emitWhileNode(self, node) -> None:
+        self.code += f"{self.getIndentation()}while ("
+        self.emitExpression(node.whileCondition)
+        self.code += ")"
+        self.emitBlock(node.whileBody)        
 
     def emitVariableAssignment(self, node) -> None:
         if(node.isReassignment):

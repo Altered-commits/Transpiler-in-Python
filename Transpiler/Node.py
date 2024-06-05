@@ -102,3 +102,14 @@ class IfNode:
 
     def evaluateExprType(self) -> int:
         raise NotImplementedError("no impl for IfNode")
+    
+class WhileNode:
+    def __init__(self, whileCondition, whileBody) -> None:
+        self.whileCondition = whileCondition
+        self.whileBody      = whileBody
+    
+    def __repr__(self) -> str:
+        return "WHILE BLOCK"
+    
+    def evaluateExprType(self) -> int:
+        raise NotImplementedError("no impl for WhileNode")

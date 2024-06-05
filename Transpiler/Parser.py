@@ -136,6 +136,12 @@ class Parser:
             elseBody = self.parseBlock()
         
         return IfNode(ifCondition, ifBody, elifBlock, elseBody)
+    
+    def parseWhileCondition(self):
+        whileCondition = self.parseExpr()
+        whileBody      = self.parseBlock()
+        
+        return WhileNode(whileCondition, whileBody)
 
     #-----------PARSING METHODS DOWN BELOW-----------
     def parse(self):
@@ -163,6 +169,10 @@ class Parser:
         if(self.currentToken.tokenType == TOKEN_KEYWORD_IF):
             self.advance()
             return self.parseIfCondition()
+        
+        if(self.currentToken.tokenType == TOKEN_KEYWORD_WHILE):
+            self.advance()
+            return self.parseWhileCondition()
 
         return self.parseExpr()
         # printError("ParserError", "Expected statement keywords: 'var'")
