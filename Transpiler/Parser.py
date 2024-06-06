@@ -20,14 +20,31 @@ class Parser:
         self.currentToken = self.lexer.lex()
         #List of statement
         self.statementList = []
-        #Temporary symbol table
-        self.parserSymbolTable = {}
+        #Temporary symbol table (stack based scope)
+        self.parserSymbolTable = [{}]
     
     def advance(self) -> None:
         self.currentToken = self.lexer.lex()
 
     def peekToken(self) -> Token:
         return self.lexer.peekToken()
+
+    def createScope(self) -> None:
+        self.parserSymbolTable.append({})
+    
+    def destroyScope(self) -> None:
+        self.parserSymbolTable.pop()
+
+    def setToScope(self, key, value) -> None:
+        self.parserSymbolTable[-1][key] = value
+    
+    def getFromTopScope(self, key):
+        return self.parserSymbolTable[-1].get(key)
+
+    def getFromNthScope(self, key):
+        for i in reversed(self.parserSymbolTable):
+            if key in i:
+                return i.get(key)
     
     #-----------HELPER METHODS DOWN BELOW-----------
     def parseCommonBinaryOperations(self, leftExprFunction, tokenGroup, rightExprFunction = None):
@@ -52,7 +69,7 @@ class Parser:
 
     def parseVariableAssignment(self):
         identifier = self.currentToken.tokenValue
-        if(self.parserSymbolTable.get(identifier) != None):
+        if(self.getFromTopScope(identifier) != None):
             printError("ParserError", f"'{identifier}' identifier already exists, use another one")
         self.advance()
 
@@ -67,7 +84,7 @@ class Parser:
         node = VariableAssignNode(evaluatedType, identifier, expr)
 
         #Store type and ref to the object before returning it
-        self.parserSymbolTable[identifier] = (evaluatedType, node)
+        self.setToScope(identifier, (evaluatedType, node))
 
         return node
 
@@ -75,7 +92,7 @@ class Parser:
         #Advance over eq token
         self.advance()
         #Using Tuple[] so intellisense properly works
-        variable: Tuple[int, VariableAssignNode] = self.parserSymbolTable.get(identifier)
+        variable: Tuple[int, VariableAssignNode] = self.getFromNthScope(identifier)
         if(variable == None):
             printError("ParserError", f"Undefined identifier to re-assign to: '{identifier}'")
         
@@ -100,15 +117,7 @@ class Parser:
         body = []
 
         while self.currentToken.tokenType != TOKEN_RBRACE and self.currentToken.tokenType != TOKEN_EOF:
-            tokenType = self.currentToken.tokenType
             body.append(self.parseStatement())
-            
-            if(tokenType < TOKEN_KEYWORD_IF):
-                #A valid expression needs to be terminated by semicolon
-                if(self.currentToken.tokenType != TOKEN_SEMIC):
-                    printError("ParserError", "Expected ';' for the expression")
-            
-            self.advance()
         
         if(self.currentToken.tokenType != TOKEN_RBRACE):
             printError("ParserError", "Expected ending '}' for statement")
@@ -146,36 +155,40 @@ class Parser:
     #-----------PARSING METHODS DOWN BELOW-----------
     def parse(self):
         while self.currentToken.tokenType != TOKEN_EOF:
-            tokenType = self.currentToken.tokenType
-            parsedStatement = self.parseStatement()
-            
-            if(tokenType < TOKEN_KEYWORD_IF):
-                #A valid expression needs to be terminated by semicolon
-                if(self.currentToken.tokenType != TOKEN_SEMIC):
-                    printError("ParserError", "Expected ';' for the expression")
-
-            self.advance()
-
-            self.statementList.append(parsedStatement)
+            self.statementList.append(self.parseStatement())
         
         return self.statementList
 
     #var keyword | expr
     def parseStatement(self):
+        tokenType = self.currentToken.tokenType
+        statement = None
+
         if(self.currentToken.tokenType == TOKEN_KEYWORD_VAR):
             self.advance()
-            return self.parseVariableAssignment()
+            statement = self.parseVariableAssignment()
 
-        if(self.currentToken.tokenType == TOKEN_KEYWORD_IF):
+        elif(self.currentToken.tokenType == TOKEN_KEYWORD_IF):
             self.advance()
-            return self.parseIfCondition()
+            self.createScope()
+            statement = self.parseIfCondition()
+            self.destroyScope()
         
-        if(self.currentToken.tokenType == TOKEN_KEYWORD_WHILE):
+        elif(self.currentToken.tokenType == TOKEN_KEYWORD_WHILE):
             self.advance()
-            return self.parseWhileCondition()
-
-        return self.parseExpr()
-        # printError("ParserError", "Expected statement keywords: 'var'")
+            self.createScope()
+            statement = self.parseWhileCondition()
+            self.destroyScope()
+        
+        else:
+            statement = self.parseExpr()
+        
+        if(tokenType < TOKEN_KEYWORD_IF):
+            if(self.currentToken.tokenType != TOKEN_SEMIC):
+                printError("ParserError", "Expected ';' after expression")
+            self.advance()
+        
+        return statement
 
     #and, or, variable reassignment
     def parseExpr(self):
@@ -234,10 +247,12 @@ class Parser:
         
         if(self.currentToken.tokenType == TOKEN_IDENTIFER):
             #Get variable type from the parserSymbolTable
-            identifierType = self.parserSymbolTable.get(self.currentToken.tokenValue)[0]
-            if(identifierType == None):
+            variable = self.getFromNthScope(self.currentToken.tokenValue)
+            if(variable == None):
                 printError("ParserError", f"Undefined variable: {self.currentToken.tokenValue}")
             
+            identifierType = variable[0]
+
             node = VariableAccessNode(identifierType, self.currentToken.tokenValue)
             self.advance()
             

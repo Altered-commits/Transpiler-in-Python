@@ -8,5 +8,11 @@ var c = '\uFFAA';
 
 while b == c
 {
-    a = b - a;
+    while a == b
+    {
+        if a == c
+        {
+            a = a - b;
+        }
+    }
 }

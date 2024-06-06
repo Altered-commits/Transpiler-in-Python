@@ -7,7 +7,11 @@ int main(void)
     uint16_t c = 65450;
 
     while (b == c) {
-        a = b - a;
+        while (a == b) {
+            if (a == c) {
+                a = a - b;
+            }
+        }
     }
 
     return 0;
