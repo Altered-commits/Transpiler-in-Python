@@ -1,4 +1,4 @@
-from Node import ValueNode, BinaryOperationNode, UnaryOperationNode, VariableAssignNode, VariableAccessNode, IfNode, WhileNode
+from Node import ValueNode, BinaryOperationNode, UnaryOperationNode, VariableAssignNode, VariableAccessNode, IfNode, WhileNode, ForNode
 from EvalTypes import evalTypeToString
 from Printer import printError
 from Token import tokenOperatorsToString
@@ -74,7 +74,7 @@ class Emitter:
         #End of main function
         self.code += "\n    return 0;\n}"
 
-    def emitStatement(self, node) -> None:
+    def emitStatement(self, node, forceNoSemicolon = False) -> None:
         shouldEndWithSemic = False
         if(isinstance(node, VariableAssignNode)):
             shouldEndWithSemic = True
@@ -83,6 +83,8 @@ class Emitter:
             self.emitIfNode(node)
         elif(isinstance(node, WhileNode)):
             self.emitWhileNode(node)
+        elif(isinstance(node, ForNode)):
+            self.emitForNode(node)    
         #Expression
         else:
             shouldEndWithSemic = True
@@ -90,7 +92,7 @@ class Emitter:
             self.emitExpression(node)
         
         #End statements for now in ';', later we will change this
-        if(shouldEndWithSemic):
+        if(shouldEndWithSemic and not forceNoSemicolon):
             self.code += ";\n"
         shouldEndWithSemic = False
     
@@ -129,7 +131,23 @@ class Emitter:
         self.code += f"{self.getIndentation()}while ("
         self.emitExpression(node.whileCondition)
         self.code += ")"
-        self.emitBlock(node.whileBody)        
+        self.emitBlock(node.whileBody)  
+
+    def emitForNode(self, node) -> None:
+        self.code += f"{self.getIndentation()}for ("
+
+        oldIndentationLevel = self.indentationLevel
+        self.indentationLevel = 0
+
+        self.emitStatement(node.forAssignment, True)
+        self.code += "; "
+        self.emitExpression(node.forCondition)
+        self.code += "; "
+        self.emitExpression(node.forIncrement)
+        self.code += ")"
+
+        self.indentationLevel = oldIndentationLevel
+        self.emitBlock(node.forBody)
 
     def emitVariableAssignment(self, node) -> None:
         if(node.isReassignment):

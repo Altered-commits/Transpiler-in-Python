@@ -113,3 +113,17 @@ class WhileNode:
     
     def evaluateExprType(self) -> int:
         raise NotImplementedError("no impl for WhileNode")
+    
+class ForNode:
+    def __init__(self, forAssignment, forCondition, forIncrement, forBody) -> None:
+        self.forAssignment  = forAssignment
+        self.forCondition   = forCondition
+        self.forIncrement   = forIncrement
+        self.forBody        = forBody
+
+    def __repr__(self) -> str:
+        return "FOR BLOCK"
+    
+    def evaluateExprType(self) -> int:
+        raise NotImplementedError("no impl for ForNode")
+

@@ -151,6 +151,26 @@ class Parser:
         whileBody      = self.parseBlock()
         
         return WhileNode(whileCondition, whileBody)
+    
+    def parseForCondition(self):
+        if(self.currentToken.tokenType != TOKEN_KEYWORD_VAR):
+            printError("ParseError", "Expected 'var' at the starting of assignment in for loop")
+        self.advance()
+
+        forAssignment = self.parseVariableAssignment()
+        if(self.currentToken.tokenType != TOKEN_SEMIC):
+            printError("ParserError", "Expected ';' after assignment")
+        self.advance()   
+
+        forCondition  = self.parseExpr()
+        if(self.currentToken.tokenType != TOKEN_SEMIC):
+            printError("ParserError", "Expected ';' after condition")
+        self.advance()
+
+        forIncrement  = self.parseExpr()
+        forBody       = self.parseBlock()
+
+        return ForNode(forAssignment, forCondition, forIncrement, forBody)
 
     #-----------PARSING METHODS DOWN BELOW-----------
     def parse(self):
@@ -179,6 +199,12 @@ class Parser:
             self.createScope()
             statement = self.parseWhileCondition()
             self.destroyScope()
+
+        elif(self.currentToken.tokenType == TOKEN_KEYWORD_FOR):
+            self.advance()
+            self.createScope()
+            statement = self.parseForCondition()
+            self.destroyScope()    
         
         else:
             statement = self.parseExpr()
