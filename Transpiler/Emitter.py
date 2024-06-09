@@ -1,7 +1,7 @@
-from Node import ValueNode, BinaryOperationNode, UnaryOperationNode, VariableAssignNode, VariableAccessNode, IfNode, WhileNode, ForNode
+from Node import *
 from EvalTypes import evalTypeToString
-from Printer import printError
-from Token import tokenOperatorsToString
+from Printer   import printError
+from Token     import tokenOperatorsToString
 
 class Emitter:
     '''
@@ -19,12 +19,15 @@ class Emitter:
         return 0;
     }
     '''
-    def __init__(self, statements) -> None:
-        self.statements = statements
-        self.code = ""
+    def __init__(self, parsedCode) -> None:
+        self.statements       = parsedCode[0]
+        self.funcs            = parsedCode[1].values()
+        self.globalVars       = parsedCode[2].values()
+        #String repr to be written to file
+        self.code             = ""
         self.indentationLevel = 0
         #Pre-cache some indentation levels
-        self.identationCache = {
+        self.identationCache  = {
             0: "",
             1: "    ",
             2: "        ",
@@ -45,8 +48,36 @@ class Emitter:
     #------------Emitter------------
     def emit(self) -> str:
         self.emitHeader()
+        self.emitGlobalVars()
+        self.emitUserDefinedFunctions()
         self.emitMainFunction()
         return self.code
+    
+    def emitGlobalVars(self):
+        for var in self.globalVars:
+            self.emitVariableAssignment(var[1]) #[1] is the variable assign node itself
+            self.code += ';\n'
+        
+        self.code += '\n'
+
+    def emitUserDefinedFunctions(self) -> None:
+        for func in self.funcs:
+            self.emitFunction(func)
+    
+    def emitFunction(self, func):
+        self.code += f"{evalTypeToString(func.returnType)} {func.funcName}("
+        #Parameters
+        self.code += ", ".join(f"{evalTypeToString(paramType)} {paramId}" for paramId, paramType in func.funcParams)
+        self.code += ")\n{\n"
+        
+        #Inc indentation
+        self.incIndentationLevel()
+        #Function body
+        for statement in func.funcBody:
+            self.emitStatement(statement)
+        
+        self.decIndentationLevel()
+        self.code += "}\n\n"
 
     def emitHeader(self) -> None:
         #Right now the only usefull header file is <stdint.h>
@@ -79,12 +110,20 @@ class Emitter:
         if(isinstance(node, VariableAssignNode)):
             shouldEndWithSemic = True
             self.emitVariableAssignment(node)
+
         elif(isinstance(node, IfNode)):
             self.emitIfNode(node)
+
         elif(isinstance(node, WhileNode)):
             self.emitWhileNode(node)
+
         elif(isinstance(node, ForNode)):
-            self.emitForNode(node)    
+            self.emitForNode(node)
+
+        elif(isinstance(node, ReturnNode)):
+            shouldEndWithSemic = True
+            self.code += f"{self.getIndentation()}return "
+            self.emitExpression(node.returnExpr)
         #Expression
         else:
             shouldEndWithSemic = True
@@ -187,3 +226,15 @@ class Emitter:
             self.emitVariableAssignment(node)
 
             self.indentationLevel = oldIndentationLevel
+        
+        elif isinstance(node, FuncCallNode):
+            self.code += f"{node.funcName}("
+            #Args
+            argLen = len(node.funcArgs)
+            for idx, arg in enumerate(node.funcArgs):
+                self.emitExpression(arg)
+                if(idx < argLen - 1):
+                    self.code += ", "
+            
+            #Closing parentheses
+            self.code += ")"

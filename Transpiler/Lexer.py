@@ -1,4 +1,4 @@
-from Token import *
+from Token   import *
 from Printer import printError, printWarning
 from Context import updateContext
 
@@ -47,7 +47,7 @@ class Lexer:
         savedCurCol  = self.curCol
         
         #Get the next token
-        nextToken = self.lex()
+        nextToken = self.getToken()
         
         #Restore the lexer state
         self.curIndex = savedIndex
@@ -85,7 +85,7 @@ class Lexer:
             self.advance()
         
         lexedText = self.text[startPos : self.curIndex]
-        tokenType = keywordToTokenValue.get(lexedText, TOKEN_IDENTIFER)
+        tokenType = keywordToTokenValue.get(lexedText, TOKEN_IDENTIFIER)
         
         return Token(lexedText, tokenType)
 
@@ -141,7 +141,7 @@ class Lexer:
         self.advance()
         return Token(charLiteral, TOKEN_CHAR)
 
-    def lex(self) -> Token:
+    def getToken(self) -> Token:
         while self.curChar != '\0':
             updateContext(self.curLine, self.curCol)
             self.skipSpaces()

@@ -2,7 +2,7 @@
 All valid token constants, string to token / keyword mapper, token groups, etc. defined in this file
 '''
 #Primitive types
-TOKEN_IDENTIFER = 0
+TOKEN_IDENTIFIER = 0
 TOKEN_INT       = 1
 TOKEN_FLOAT     = 2
 TOKEN_CHAR      = 3
@@ -25,23 +25,27 @@ TOKEN_CMP_LT   = 35
 TOKEN_CMP_LTEQ = 36
 
 #Symbols (Identification starts from '50')
-TOKEN_SEMIC = 50
+TOKEN_SEMIC  = 50
 TOKEN_LPAREN = 51
 TOKEN_RPAREN = 52
 TOKEN_LBRACE = 53
 TOKEN_RBRACE = 54
+TOKEN_COMMA  = 55
 
 #Keywords (Identification starts from '60')
 TOKEN_KEYWORD_VAR = 60
 #Logical
-TOKEN_KEYWORD_AND  = 61
-TOKEN_KEYWORD_OR   = 62
-TOKEN_KEYWORD_NOT  = 63
-TOKEN_KEYWORD_IF   = 64
-TOKEN_KEYWORD_ELIF = 65
-TOKEN_KEYWORD_ELSE = 66
-TOKEN_KEYWORD_WHILE = 67
-TOKEN_KEYWORD_FOR = 68
+TOKEN_KEYWORD_AND    = 61
+TOKEN_KEYWORD_OR     = 62
+TOKEN_KEYWORD_NOT    = 63
+TOKEN_KEYWORD_RETURN = 64
+TOKEN_KEYWORD_GLOBAL = 65
+TOKEN_KEYWORD_IF     = 66
+TOKEN_KEYWORD_ELIF   = 67
+TOKEN_KEYWORD_ELSE   = 68
+TOKEN_KEYWORD_WHILE  = 69
+TOKEN_KEYWORD_FOR    = 70
+TOKEN_KEYWORD_FUNC   = 71
 
 #END OF FILE
 TOKEN_EOF = 200
@@ -61,7 +65,7 @@ class Token:
 #String to Token Value mapper
 stringToTokenValue = {
     "+": TOKEN_ADD,
-    #'-': handled in lex()
+    #'-': handled in getToken()
     "*": TOKEN_MUL,
     "/": TOKEN_DIV,
     "%": TOKEN_MOD,
@@ -79,6 +83,7 @@ stringToTokenValue = {
     ")": TOKEN_RPAREN,
     "{": TOKEN_LBRACE,
     "}": TOKEN_RBRACE,
+    ",": TOKEN_COMMA,
 
     #We have reached end of file, lexed all of it
     '\0': TOKEN_EOF
@@ -104,15 +109,19 @@ tokenOperatorsToString = {
 
 #Keyword to token value mapper
 keywordToTokenValue = {
-    "var" : TOKEN_KEYWORD_VAR,
-    "and" : TOKEN_KEYWORD_AND,
-    "or"  : TOKEN_KEYWORD_OR,
-    "not" : TOKEN_KEYWORD_NOT,
-    "if"  : TOKEN_KEYWORD_IF,
-    "elif": TOKEN_KEYWORD_ELIF,
-    "else": TOKEN_KEYWORD_ELSE,
-    "while": TOKEN_KEYWORD_WHILE,
-    "for"  : TOKEN_KEYWORD_FOR
+    "var"   : TOKEN_KEYWORD_VAR,
+    "and"   : TOKEN_KEYWORD_AND,
+    "or"    : TOKEN_KEYWORD_OR,
+    "not"   : TOKEN_KEYWORD_NOT,
+    "if"    : TOKEN_KEYWORD_IF,
+    "elif"  : TOKEN_KEYWORD_ELIF,
+    "else"  : TOKEN_KEYWORD_ELSE,
+    "while" : TOKEN_KEYWORD_WHILE,
+    "for"   : TOKEN_KEYWORD_FOR,
+    "var"   : TOKEN_KEYWORD_VAR,
+    "func"  : TOKEN_KEYWORD_FUNC,
+    "return": TOKEN_KEYWORD_RETURN,
+    "global": TOKEN_KEYWORD_GLOBAL
 }
 
 '''
@@ -121,8 +130,7 @@ Optimizing it so it doesnt have to check for multiple variables and can just use
 
 Mainly used for parseCommonBinaryOperations in Parser.py
 '''
-
-#Not handled seperately
+#'NOT' handled seperately
 LOGICAL_GROUP     = (1 << TOKEN_KEYWORD_AND) | (1 << TOKEN_KEYWORD_OR)
 COMPARISION_GROUP = (1 << TOKEN_CMP_EQ) | (1 << TOKEN_CMP_NEQ) | (1 << TOKEN_CMP_GT) |\
                     (1 << TOKEN_CMP_GTEQ) | (1 << TOKEN_CMP_LT) | (1 << TOKEN_CMP_LTEQ)
@@ -131,6 +139,7 @@ TERM_GROUP        = (1 << TOKEN_MUL) | (1 << TOKEN_DIV) | (1 << TOKEN_MOD)
 
 #Used in EvalTypes.py determineExprType function
 COMPARISION_AND_LOGICAL_GROUP = COMPARISION_GROUP | LOGICAL_GROUP
+
 '''
 tokenInGroup: Takes a token type, checks if it belongs to a certain group, return boolean
 '''

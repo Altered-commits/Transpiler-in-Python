@@ -15,7 +15,7 @@ fileContent = None
 try:
     with open(args.filename, "r") as inFile:
         fileContent = inFile.readlines()
-except FileNotFoundError:
+except (FileNotFoundError, OSError):
     Printer.printError("Transpiler", f"File not found to transpile: {args.filename}")
 
 preprocessor = Preprocessor.Preprocessor(fileContent)

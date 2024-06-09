@@ -2,29 +2,37 @@ include Math.MathDefs
 
 define PI_E PI / E
 
-var a = PI_E;
-var b = E;
-var c = '\uFFAA';
+global var c = 0;
+global var d = 1.2252;
 
-while b == c
+func innerFunc(a, b)
 {
-    while a == b
-    {
-        if a == c
-        {
-            a = a - b;
-        }
+    func helperFunc(a, b) {
+        return a * b - c;
+    }
+    
+    var result = helperFunc(a, b);
+    
+    if (result > 0) {
+        return 1;
+    } elif (result < 0) {
+        return -1;
+    } else {
+        return -10;
     }
 }
 
-
-for var i = 1; i < 10; i = i + 1.234
+func outerFunc(x, y)
 {
-    c = b * a;
-    while i == 4 {
-        b = 0;
-        if b == 0 {
-            a = 0;
-        }
+    var z = innerFunc(x, y);
+    
+    if (z == 1) {
+        return 1;
+    } elif (z == -1) {
+        return -1;
+    } else {
+        return -0.142;
     }
-} 
+}
+
+var output = outerFunc(5, 3);

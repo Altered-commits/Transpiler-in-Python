@@ -2,8 +2,8 @@
 All valid nodes for AST defined here. Function used for Semantic Analysis built in the Node Types -> evaluateExprType
 '''
 from EvalTypes import determineExpressionType, invertIfIntegerType, EVAL_UINT8
-from Token import TOKEN_SUB, TOKEN_KEYWORD_NOT
-from Printer import printError
+from Token     import TOKEN_SUB, TOKEN_KEYWORD_NOT
+from Printer   import printError
 
 #All node types defined here
 class ValueNode:
@@ -127,3 +127,52 @@ class ForNode:
     def evaluateExprType(self) -> int:
         raise NotImplementedError("no impl for ForNode")
 
+# FUNCTIONS
+class ReturnNode:
+    def __init__(self, returnExpr) -> None:
+        self.returnExpr = returnExpr
+    
+    def __repr__(self) -> str:
+        return f"return {self.returnExpr}"
+
+    def evaluateExprType(self) -> int:
+        return self.returnExpr.evaluateExprType()
+
+class FuncTemplateNode:
+    def __init__(self, funcName, funcParams, funcBody) -> None:
+        self.funcName   = funcName
+        self.funcParams = funcParams
+        self.funcBody   = funcBody
+
+    def __repr__(self) -> str:
+        return f"FunctionTemplate<{self.funcName}>"
+
+    def evaluateExprType(self) -> int:
+        raise NotImplementedError("No impl for func template node")
+
+class FuncCallNode:
+    def __init__(self, funcName, funcArgs, returnType) -> None:
+        self.funcName   = funcName
+        self.funcArgs   = funcArgs
+        self.returnType = returnType
+    
+    def __repr__(self) -> str:
+        args = ", ".join(repr(arg) for arg in self.funcArgs)
+        return f"{self.funcName}({args})"
+
+    def evaluateExprType(self) -> int:
+        return self.returnType
+
+class FuncDeclNode:
+    def __init__(self, funcName, funcParams, funcBody, returnType) -> None:
+        self.funcName   = funcName
+        self.funcParams = funcParams #List of tuples[identifier, type]
+        self.funcBody   = funcBody
+        self.returnType = returnType
+    
+    def __repr__(self) -> str:
+        params = ", ".join(f"{paramValue}: {paramType}" for paramValue, paramType in self.funcParams)
+        return f"func {self.funcName}({params}) -> {self.funcBody}"
+
+    def evaluateExprType(self) -> int:
+        raise NotImplementedError("No impl for func decl node")

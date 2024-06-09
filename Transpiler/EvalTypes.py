@@ -2,7 +2,7 @@
 The home to Functions and CONSTANTS which will be used in Semantic Analysis
 Contains Functions to determine expression type, promote types if possible, check valid types for specific operators, etc.
 '''
-from Token import *
+from Token   import *
 from Printer import printError, printWarning
 
 #MAX NUMERIC VALUES ALLOWED FOR EACH TYPE
@@ -10,6 +10,7 @@ INT64_MAX  = 9223372036854775807
 INT64_MIN  = -9223372036854775808
 UINT64_MAX = 18446744073709551615
 
+EVAL_VOID   = -1
 #Integer Unsigned
 EVAL_UINT8  = 0
 EVAL_UINT16 = 1
@@ -27,10 +28,35 @@ EVAL_FLOAT32 = 8
 EVAL_FLOAT64 = 9
 
 '''
+mangleFunctionName: Given a function name and the parameter types, it will mangle the function name by adding parameter types
+                    to the end of the function name.
+'''
+typeMap = {
+    EVAL_VOID    : "V",
+    EVAL_UINT8   : 'UC',
+    EVAL_UINT16  : 'US',
+    EVAL_UINT32  : 'UI',
+    EVAL_UINT64  : 'UL',
+    EVAL_INT8    : 'C',
+    EVAL_INT16   : 'S',
+    EVAL_INT32   : 'I',
+    EVAL_INT64   : 'L',
+    EVAL_FLOAT32 : 'F',
+    EVAL_FLOAT64 : 'D',
+}
+
+def mangleFunctionName(funcName, funcParamsTypes):
+    #u for unknown types
+    mangledTypes = [typeMap.get(paramType, 'u') for paramType in funcParamsTypes]
+    mangledName = funcName + "".join(mangledTypes)
+    return mangledName
+
+'''
 evalTypeToString: EVAL_ type converted to string format
 '''
 def evalTypeToString(evalType):
     evalToStringMapper = {
+        EVAL_VOID:    "void",
         EVAL_UINT8:   "uint8_t",
         EVAL_UINT16:  "uint16_t",
         EVAL_UINT32:  "uint32_t",
@@ -130,6 +156,7 @@ Example:
     -For comparision and logical operators it always returns uint8, as they return a boolean (1 or 0)
 '''
 categorizedTypePriority = {
+    EVAL_VOID: -1,
     EVAL_UINT8: 0, EVAL_UINT16: 1, EVAL_UINT32: 2, EVAL_UINT64: 3,
     EVAL_INT8: 0, EVAL_INT16: 1, EVAL_INT32: 2, EVAL_INT64: 3,
     #Floating point numbers will be given higher priority, always
@@ -137,6 +164,7 @@ categorizedTypePriority = {
 }
 
 typeCategory = {
+    EVAL_VOID: -1,
     EVAL_UINT8: 0, EVAL_UINT16: 0, EVAL_UINT32: 0, EVAL_UINT64: 0,
     EVAL_INT8: 1, EVAL_INT16: 1, EVAL_INT32: 1, EVAL_INT64: 1,
     EVAL_FLOAT32: 2, EVAL_FLOAT64: 2
@@ -147,6 +175,9 @@ def determineExpressionType(leftType, rightType, operator) -> int:
     RTP = categorizedTypePriority.get(rightType)
     LTC = typeCategory[leftType]
     RTC = typeCategory[rightType]
+
+    if(LTP == -1 or RTP == -1):
+        printError("TypeDeterminingError", "'void' type is not allowed for operators")
 
     isMinusOperator   = (operator == TOKEN_SUB)
     leftIsNotUnsigned = (leftType >= EVAL_INT8)
@@ -191,16 +222,23 @@ uintToInt = {
     EVAL_UINT64: EVAL_INT64
 }
 
-def promoteType(initialType, newType, identifier):
+def promoteType(initialType, newType, identifier, isFunc = False):
     if initialType == newType:
         return initialType
+    
+    if(newType == EVAL_VOID or initialType == EVAL_VOID):
+        printError("TypePromotionError", f"Cannot promote to 'void' type for identifier '{identifier}'")
 
     initialPriority = categorizedTypePriority[initialType]
     newPriority = categorizedTypePriority[newType]
 
     #If any type is float, promote to float
     if initialType >= EVAL_FLOAT32 or newType >= EVAL_FLOAT32:
-        printWarning("TypePromotionWarning", f"Promotion of identifier '{identifier}' to floating type may cause it's previous values to loose their precision")
+        if isFunc:
+            printWarning("TypePromotionWarning", f"Promotion of '{identifier}' return type to floating type may cause it's previous return values to loose their precision")
+        else:
+            printWarning("TypePromotionWarning", f"Promotion of identifier '{identifier}' to floating type may cause it's previous values to loose their precision")
+
         return EVAL_FLOAT32 if newPriority <= categorizedTypePriority[EVAL_FLOAT32] else EVAL_FLOAT64
     
     #Unsigned to signed conversion is allowed, with at least the same bit width
