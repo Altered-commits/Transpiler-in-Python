@@ -3,36 +3,14 @@ include Math.MathDefs
 define PI_E PI / E
 
 global var c = 0;
-global var d = 1.2252;
+global var d = PI_E;
 
-func innerFunc(a, b)
+func fib(x)
 {
-    func helperFunc(a, b) {
-        return a * b - c;
-    }
-    
-    var result = helperFunc(a, b);
-    
-    if (result > 0) {
+    if x == 1 {
         return 1;
-    } elif (result < 0) {
-        return -1;
-    } else {
-        return -10;
     }
+    return fib(x - 2) + fib(x - 1);
 }
 
-func outerFunc(x, y)
-{
-    var z = innerFunc(x, y);
-    
-    if (z == 1) {
-        return 1;
-    } elif (z == -1) {
-        return -1;
-    } else {
-        return -0.142;
-    }
-}
-
-var output = outerFunc(5, 3);
+var output = fib(5);

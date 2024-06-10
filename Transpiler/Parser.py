@@ -288,7 +288,7 @@ class Parser:
         self.createScope()
         self.createTemplateScope()
         #Set context
-        context = self.funcContext.saveFunctionContext(True, funcName)
+        context = self.funcContext.saveFunctionContext(True, funcName, mangledFuncName)
 
         functionParameters = list(zip(funcTemplate.funcParams, parameterTypes))
         for idx, (param, paramType) in enumerate(functionParameters):
@@ -334,7 +334,7 @@ class Parser:
         return callNode
 
     def parseFuncCall(self, funcName):
-        self.advance() # Advance '('
+        self.advance() #Advance '('
 
         arguments = []
         while self.currentToken.tokenType != TOKEN_RPAREN:
@@ -357,13 +357,20 @@ class Parser:
         if userArgsLen != funcArgsLen:
             printError("ParserError", f"Function '{funcName}' expects {funcArgsLen} argument but got {userArgsLen}")
 
-        # Deduce types for parameters based on actual arguments pass to the function
+        #Deduce types for parameters based on actual arguments pass to the function
         parameterTypes = [arg.evaluateExprType() for arg in arguments]
 
-        # Name mangling for function instantiation
+        #Name mangling for function instantiation
         mangledFuncName = mangleFunctionName(funcName, parameterTypes)
+        
+        #Get the currently on-going function context and check if we are recursively calling it
+        _, currentFuncName, currentMangledFuncName = self.funcContext.getFunctionContext() 
 
-        # If function is already instantiated, use it
+        #Recursive call, return node
+        if(currentFuncName == funcName):
+            return FuncCallNode(currentMangledFuncName, arguments, self.returnType)
+
+        #If function is already instantiated, use it
         function = self.instantiatedFuncs.get(mangledFuncName)
         if function != None:
             return FuncCallNode(mangledFuncName, arguments, function.returnType)
@@ -495,7 +502,7 @@ class Parser:
             if self.currentToken.tokenType == TOKEN_LPAREN:
                 return self.parseFuncCall(atom.tokenValue)
             else:
-                printError("ParserError", f"Function call expected '(' after identifier")
+                printError("ParserError", "Function call expected '(' after identifier")
         
         return atom
 

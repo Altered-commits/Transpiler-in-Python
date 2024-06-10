@@ -15,30 +15,33 @@ def getContext() -> tuple[int, int]:
 #Very simple function context
 class FunctionContext:
     def __init__(self) -> None:
-        self.isFunc     = False
-        self.canReturn  = False
-        self.funcName   = ""
+        self.isFunc      = False
+        self.canReturn   = False
+        self.funcName    = ""
+        self.mangledName = ""
     
-    def saveFunctionContext(self, canReturn, funcName) -> dict:
+    def saveFunctionContext(self, canReturn, funcName, mangledName) -> dict:
         # Save previous states
         prevContext = {
             'isFunc': self.isFunc,
             'canReturn': self.canReturn,
-            'funcName': self.funcName
+            'funcName': self.funcName,
+            'mangledName': mangledName
         }
         
         # Set new states
-        self.canReturn = canReturn
-        self.funcName  = funcName
-        self.isFunc    = True
+        self.canReturn   = canReturn
+        self.funcName    = funcName
+        self.mangledName = mangledName
+        self.isFunc      = True
 
         return prevContext
 
     def isFuncCurrently(self) -> bool:
         return self.isFunc
 
-    def getFunctionContext(self) -> tuple[bool, str]:
-        return (self.canReturn, self.funcName)
+    def getFunctionContext(self) -> tuple[bool, str, str]:
+        return (self.canReturn, self.funcName, self.mangledName)
 
     def resetFunctionContext(self, context) -> None:
         self.canReturn  = context['canReturn']

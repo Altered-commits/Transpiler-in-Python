@@ -1,44 +1,19 @@
 #include <stdint.h>
 
 uint8_t c = 0;
-float d = 1.2252;
+float d = 3.14159 / 2.71828;
 
-int8_t helperFuncUCUC(uint8_t a, uint8_t b)
+uint8_t fibUC(uint8_t x)
 {
-    return a * b - c;
-}
-
-int8_t innerFuncUCUC(uint8_t a, uint8_t b)
-{
-    int8_t result = helperFuncUCUC(a, b);
-    if (result > 0) {
+    if (x == 1) {
         return 1;
     }
-    else if (result < 0) {
-        return -1;
-    }
-    else {
-        return -10;
-    }
-}
-
-float outerFuncUCUC(uint8_t x, uint8_t y)
-{
-    int8_t z = innerFuncUCUC(x, y);
-    if (z == 1) {
-        return 1;
-    }
-    else if (z == -1) {
-        return -1;
-    }
-    else {
-        return -0.142;
-    }
+    return fibUC(x - 2) + fibUC(x - 1);
 }
 
 int main(void)
 {
-    float output = outerFuncUCUC(5, 3);
+    uint8_t output = fibUC(5);
 
     return 0;
 }
