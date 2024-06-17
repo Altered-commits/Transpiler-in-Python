@@ -237,6 +237,15 @@ class Parser:
         forBody       = self.parseBlock()
 
         return ForNode(forAssignment, forCondition, forIncrement, forBody)
+    
+    def parseDoWhileCondition(self):
+        dowhileBody = self.parseBlock()
+        if(self.currentToken.tokenType != TOKEN_KEYWORD_WHILE):
+            printError("ParseError", "Expected 'while' after the body of the do-while loop")
+        self.advance()
+        dowhileCondition = self.parseExpr()
+
+        return DoWhileNode(dowhileCondition, dowhileBody)
 
     def parseFuncTemplates(self, isNested = False):
         if self.currentToken.tokenType != TOKEN_IDENTIFIER:
@@ -552,6 +561,12 @@ class Parser:
             self.createScope()
             statement = self.parseForCondition()
             self.destroyScope()    
+
+        elif(self.currentToken.tokenType == TOKEN_KEYWORD_DO):
+            self.advance()
+            self.createScope()
+            statement = self.parseDoWhileCondition()
+            self.destroyScope() 
         
         elif(self.currentToken.tokenType == TOKEN_KEYWORD_FUNC):
             self.advance()

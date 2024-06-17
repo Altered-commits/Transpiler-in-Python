@@ -126,6 +126,17 @@ class ForNode:
     
     def evaluateExprType(self) -> int:
         raise NotImplementedError("no impl for ForNode")
+    
+class DoWhileNode:
+    def __init__(self, dowhileCondition, dowhileBody) -> None:
+        self.dowhileCondition = dowhileCondition
+        self.dowhileBody      = dowhileBody
+
+    def __repr__(self) -> str:
+        return "DO-WHILE BLOCK"
+
+    def evalauteExprType(self) -> int:
+        raise NotImplementedError("no impl for DoWhileNode")    
 
 # FUNCTIONS
 class ReturnNode:

@@ -19,3 +19,11 @@ var b = "";
 
 stringInput(b);
 print("Factorial of a is: %d", fibonacci(a));
+
+do {
+    var a = 11;
+    a = a + 1;
+
+    print("%d", a);
+
+} while a != 20;

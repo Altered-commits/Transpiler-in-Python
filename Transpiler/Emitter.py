@@ -54,7 +54,7 @@ class Emitter:
         self.emitMainFunction()
         return self.code
     
-    def emitGlobalVars(self):
+    def emitGlobalVars(self) -> None:
         for var in self.globalVars:
             self.emitVariableAssignment(var[1]) #[1] is the variable assign node itself
             self.code += ';\n'
@@ -65,7 +65,7 @@ class Emitter:
         for func in self.funcs:
             self.emitFunction(func)
     
-    def emitFunction(self, func):
+    def emitFunction(self, func) -> None:
         self.code += f"{evalTypeToString(func.returnType)} {func.funcName}("
         #Parameters
         self.code += ", ".join(f"{evalTypeToString(paramType)} {paramId}" for paramId, paramType in func.funcParams)
@@ -121,6 +121,10 @@ class Emitter:
 
         elif(isinstance(node, ForNode)):
             self.emitForNode(node)
+
+        elif(isinstance(node, DoWhileNode)):
+            shouldEndWithSemic = True
+            self.emitDoWhileNode(node)
 
         elif(isinstance(node, ReturnNode)):
             shouldEndWithSemic = True
@@ -189,6 +193,13 @@ class Emitter:
 
         self.indentationLevel = oldIndentationLevel
         self.emitBlock(node.forBody)
+
+    def emitDoWhileNode(self, node) -> None:
+        self.code += f"{self.getIndentation()}do"
+        self.emitBlock(node.dowhileBody)
+        self.code += f"{self.getIndentation()}while ("
+        self.emitExpression(node.dowhileCondition)
+        self.code += ")" 
 
     def emitVariableAssignment(self, node) -> None:
         if(node.isReassignment):

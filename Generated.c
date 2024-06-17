@@ -21,5 +21,12 @@ int main(void)
     fgets(b, sizeof(b), stdin);
     printf("Factorial of a is: %d", fibonacciUC(a));
 
+    do {
+        uint8_t a = 11;
+        a = a + 1;
+        printf("%d", a);
+    }
+    while (a != 20);
+
     return 0;
 }
