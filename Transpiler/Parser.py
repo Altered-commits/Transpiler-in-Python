@@ -1,9 +1,10 @@
 from Lexer         import *
 from Node          import *
-from EvalTypes     import deduceType, promoteType, mangleFunctionName, EVAL_VOID
+from EvalTypes     import deduceType, promoteType, mangleFunctionName, getMaxBitWidthType, EVAL_VOID, EVAL_STRING
 from typing        import Tuple
 from TokenAdvancer import TokenAdvancer
 from Context       import FunctionContext
+from Builtins      import builtinCFunc
 
 class Parser:
     '''
@@ -29,9 +30,10 @@ class Parser:
         self.globalSymbolTable = {}
 
         #List of functions, their details and their templates (with scopes)
-        self.funcContext = FunctionContext()
-        self.returnType = EVAL_VOID
-        self.funcTemplates = [{}]
+        self.funcContext       = FunctionContext()
+        self.returnType        = EVAL_VOID
+        self.funcTemplates     = [{}]
+        self.inlineFuncs       = {}
         self.instantiatedFuncs = {}
     
     def advance(self) -> None:
@@ -173,6 +175,22 @@ class Parser:
 
         return body
 
+    def parseListExpr(self):
+        self.advance() #Advance '('
+
+        arguments = []
+        while self.currentToken.tokenType != TOKEN_RPAREN:
+            arguments.append(self.parseExpr())
+            if self.currentToken.tokenType != TOKEN_COMMA:
+                break
+            self.advance()
+        
+        if self.currentToken.tokenType != TOKEN_RPAREN:
+            printError("ParserError", "Expected ',' or ')' after argument")
+        self.advance()
+
+        return arguments
+
     def parseIfCondition(self):
         ifCondition = self.parseExpr()
         ifBody      = self.parseBlock()
@@ -233,7 +251,7 @@ class Parser:
 
         funcParams = []
 
-        # Parse parameters
+        #Parse parameters
         while self.currentToken.tokenType != TOKEN_RPAREN:
             if self.currentToken.tokenType != TOKEN_IDENTIFIER:
                 printError("ParserError", f"Expected identifier for function parameter in '{funcIdentifier}'")
@@ -244,7 +262,7 @@ class Parser:
                 break
             self.advance()
         
-        # Closing parenthesis
+        #Closing parenthesis
         if self.currentToken.tokenType != TOKEN_RPAREN:
             printError("ParserError", "Expected closing ')'")
         self.advance()
@@ -294,7 +312,7 @@ class Parser:
         for idx, (param, paramType) in enumerate(functionParameters):
             self.setToScope(param, (paramType, arguments[idx]), False) #All in their local scope
 
-        # Temporarily replace old lexer with TokenAdvancer and save the state
+        #Temporarily replace old lexer with TokenAdvancer and save the state
         oldLexer   = self.lexer
         oldToken   = self.currentToken
         self.lexer = TokenAdvancer(funcTemplate.funcBody)
@@ -334,28 +352,17 @@ class Parser:
         return callNode
 
     def parseFuncCall(self, funcName):
-        self.advance() #Advance '('
+        arguments = self.parseListExpr()
 
-        arguments = []
-        while self.currentToken.tokenType != TOKEN_RPAREN:
-            arguments.append(self.parseExpr())
-            if self.currentToken.tokenType != TOKEN_COMMA:
-                break
-            self.advance()
-        
-        if self.currentToken.tokenType != TOKEN_RPAREN:
-            printError("ParserError", "Expected ',' or ')' after argument")
-        self.advance()
+        funcTemplate  = self.getFuncTemplateFromAnyScope(funcName)
+        funcParamsLen = len(funcTemplate.funcParams)
+        userArgsLen   = len(arguments)
 
-        funcTemplate = self.getFuncTemplateFromAnyScope(funcName)
-        funcArgsLen  = len(funcTemplate.funcParams)
-        userArgsLen  = len(arguments)
-
-        if not funcTemplate:
+        if(not funcTemplate):
             printError("ParserError", f"Undefined function: '{funcName}'")
 
-        if userArgsLen != funcArgsLen:
-            printError("ParserError", f"Function '{funcName}' expects {funcArgsLen} argument but got {userArgsLen}")
+        if(userArgsLen != funcParamsLen):
+            printError("ParserError", f"Function '{funcName}' expects {funcParamsLen} argument but got {userArgsLen}")
 
         #Deduce types for parameters based on actual arguments pass to the function
         parameterTypes = [arg.evaluateExprType() for arg in arguments]
@@ -368,6 +375,8 @@ class Parser:
 
         #Recursive call, return node
         if(currentFuncName == funcName):
+            #For recursive calls, lets assume the return type will be big, hence we use 64bit variant of current return type
+            self.returnType = getMaxBitWidthType(self.returnType)
             return FuncCallNode(currentMangledFuncName, arguments, self.returnType)
 
         #If function is already instantiated, use it
@@ -376,6 +385,129 @@ class Parser:
             return FuncCallNode(mangledFuncName, arguments, function.returnType)
 
         return self.parseFuncDecl(funcTemplate, parameterTypes, arguments, funcName, mangledFuncName)
+
+    def parseFuncInlineC(self):
+        inlineParameters = [] #Last parameter is expected to be return type
+        #Advance past the '<' token
+        self.advance()
+        
+        #First token is always expected to be a __inline_c__ token no matter what
+        if(self.currentToken.tokenType != TOKEN_KEYWORD_INLINE_C):
+            printError("ParserError", "Expected '__inline_c__' keyword after '<', 'func<>' syntax not available for normal functions")
+        
+        self.advance()
+
+        while self.currentToken.tokenType != TOKEN_CMP_GT:
+            if(self.currentToken.tokenType != TOKEN_COMMA):
+                printError("ParserError", "Expected ',' after '__inline_c__', or ending '>'")
+            self.advance()
+
+            if(self.currentToken.tokenType != TOKEN_INT):
+                printError("ParserError", "Expected integer type to determine the '__inline_c__' functions builtin type")
+            
+            inlineParameters.append(int(self.currentToken.tokenValue))
+            self.advance()
+        
+        #Advance past '>' token
+        self.advance()
+
+        #Expect an identifier
+        if(self.currentToken.tokenType != TOKEN_IDENTIFIER):
+            printError("ParserError", "Expected identifier after '>' symbol")
+        
+        funcIdentifier = self.currentToken.tokenValue
+        self.advance()
+
+        #LPAREN -> '('
+        if(self.currentToken.tokenType != TOKEN_LPAREN):
+            printError("ParserError", "Expected '(' after identifier")
+        self.advance()
+
+        funcParams = []
+        hasVargs   = False
+        #Parse parameters
+        while self.currentToken.tokenType != TOKEN_RPAREN:
+            #Variadic arguments, no need for any other arguments, break out of the loop
+            if(self.currentToken.tokenType == TOKEN_ELLIPSIS):
+                hasVargs = True
+                self.advance()
+                break
+
+            if(self.currentToken.tokenType != TOKEN_IDENTIFIER):
+                printError("ParserError", f"Expected identifier for function parameter in '{funcIdentifier}'")
+            paramId = self.currentToken.tokenValue
+            self.advance()
+
+            if(self.currentToken.tokenType != TOKEN_COLON):
+                printError("ParserError", "Expected ':' after parameter, '__inline_c__' func mandates type specifying")
+            self.advance()
+
+            if(self.currentToken.tokenType != TOKEN_INT):
+                printError("ParserError", "Type needs to be an integer, look into TranspilerDefs.txt file")
+            paramType = int(self.currentToken.tokenValue)
+            self.advance()
+            
+            funcParams.append((paramId, paramType))
+
+            if self.currentToken.tokenType != TOKEN_COMMA:
+                break
+            self.advance()
+
+        if(self.currentToken.tokenType != TOKEN_RPAREN):
+            printError("ParserError", "Expected closing ')' for function parameters")
+        self.advance()
+
+        #If we end function with ';' it means we expect transpiler to fill body for us
+        if(self.currentToken.tokenType == TOKEN_SEMIC):
+            if(len(inlineParameters) != 2):
+                printError("ParserError", "'__inline_c__' function with no body expects 3 inline paramters: '__inline_c__', 'builtin_type', 'return_type'")
+            self.inlineFuncs[funcIdentifier] = FuncDeclNode(funcIdentifier, funcParams, None, inlineParameters[1],
+                                                        True, hasVargs, inlineParameters[0])
+            self.advance()
+        
+        #We have a body
+        elif(self.currentToken.tokenType == TOKEN_LBRACE):
+            if(len(inlineParameters) != 1):
+                printError("ParserError", "'__inline_c__' function with body expects 2 inline paramters: '__inline_c__', 'return_type'")            
+
+            self.advance() #Advance past the '{'
+            funcBody   = ""
+
+            while self.currentToken.tokenType != TOKEN_EOF and self.currentToken.tokenType != TOKEN_RBRACE:
+                funcBody += self.currentToken
+                self.advance()
+            
+            if(self.currentToken.tokenType != TOKEN_RBRACE):
+                printError("ParserError", "Expected ending '}' for '__inline_c__' function body")
+            self.advance()
+
+            self.inlineFuncs[funcIdentifier] = FuncDeclNode(funcIdentifier, funcParams, funcBody, inlineParameters[0],
+                                                        True, hasVargs)
+
+        #Invalid syntax
+        else:
+            printError("ParserError", "Expected either ';' or '{' after '__inline_c__' function declaration")
+
+    def parseInlineCCall(self, funcDecl):
+        arguments = self.parseListExpr()
+
+        funcParamsLen = len(funcDecl.funcParams)
+        userArgsLen   = len(arguments)
+
+        if(funcDecl.hasVargs):
+            #Removing '...' from args len of function
+            if(userArgsLen < funcParamsLen):
+                printError("ParserError", f"Function '{funcDecl.funcName}' expected atleast {funcParamsLen} argument but got {userArgsLen}")
+        #Len of both func and user args need to be same need to be the same
+        elif(userArgsLen != funcParamsLen):
+            printError("ParserError", f"Function '{funcDecl.funcName}' expects {funcParamsLen} argument but got {userArgsLen}")
+
+        #Builtin stuff
+        if(funcDecl.funcBody is None):
+            return InlineCFuncNode(builtinCFunc(funcDecl, arguments), funcDecl.returnType)
+
+        print(funcDecl, funcDecl.isBuiltinInlineC)
+        exit(1)
 
     #-----------PARSING METHODS DOWN BELOW-----------
     def parse(self):
@@ -423,7 +555,10 @@ class Parser:
         
         elif(self.currentToken.tokenType == TOKEN_KEYWORD_FUNC):
             self.advance()
-            self.parseFuncTemplates()
+            if(self.currentToken.tokenType == TOKEN_CMP_LT):
+                self.parseFuncInlineC()
+            else:
+                self.parseFuncTemplates()
 
         elif(self.currentToken.tokenType == TOKEN_KEYWORD_RETURN):
             context = self.funcContext.getFunctionContext()
@@ -496,35 +631,48 @@ class Parser:
     def parseCall(self):
         atom = self.parseAtom()
 
-        # Function call, needs identifier
-        if isinstance(atom, Token):
+        if(self.peekToken().tokenType == TOKEN_LPAREN):
             self.advance()
-            if self.currentToken.tokenType == TOKEN_LPAREN:
+            #Function Template
+            if(isinstance(atom, Token)):
                 return self.parseFuncCall(atom.tokenValue)
+            
+            #Inline C
+            elif(isinstance(atom, FuncDeclNode)):
+                return self.parseInlineCCall(atom)
+            
+            #Error
             else:
-                printError("ParserError", "Function call expected '(' after identifier")
+                printError("ParserError", "Current type is not callable")
         
         return atom
 
     def parseAtom(self):
-        if(self.currentToken.tokenType in (TOKEN_INT, TOKEN_FLOAT, TOKEN_CHAR)):
-            value, evalType = deduceType(self.currentToken.tokenValue, self.currentToken.tokenType == TOKEN_FLOAT, 
-                                                                        self.currentToken.tokenType == TOKEN_CHAR)
+        if(tokenInGroup(self.currentToken.tokenType, PRIMITIVE_GROUP)):
+            node = None
             
-            node = ValueNode(value, evalType)
+            if(self.currentToken.tokenType == TOKEN_STRING):
+                node = ValueNode(self.currentToken.tokenValue, EVAL_STRING)
+            else:
+                value, evalType = deduceType(self.currentToken.tokenValue, self.currentToken.tokenType == TOKEN_FLOAT, 
+                                                                        self.currentToken.tokenType == TOKEN_CHAR)
+                node = ValueNode(value, evalType)
+            
             self.advance()
-
             return node
         
         if(self.currentToken.tokenType == TOKEN_IDENTIFIER):
-            if self.getFuncTemplateFromAnyScope(self.currentToken.tokenValue):
+            if(self.getFuncTemplateFromAnyScope(self.currentToken.tokenValue)):
                 return self.currentToken
+
+            #Inline c func
+            if(self.currentToken.tokenValue in self.inlineFuncs):
+                return self.inlineFuncs[self.currentToken.tokenValue]
             
             #Get variable type from the parserSymbolTable
             variable = self.getFromNthScope(self.currentToken.tokenValue, self.funcContext.isFuncCurrently())
             if(variable == None):
-                printError("ParserError", f"Undefined variable: {self.currentToken.tokenValue}")
-            
+                printError("ParserError", f"Undefined identifier: {self.currentToken.tokenValue}")
             identifierType = variable[0]
 
             node = VariableAccessNode(identifierType, self.currentToken.tokenValue)

@@ -12,7 +12,7 @@ class ValueNode:
         self.type  = evalType
     
     def __repr__(self) -> str:
-        return f"({self.value})"
+        return f"{self.value}"
 
     def evaluateExprType(self) -> int:
         return self.type
@@ -82,7 +82,7 @@ class VariableAccessNode:
         self.variableName = variableName
     
     def __repr__(self) -> str:
-        return f"({self.variableName})"
+        return f"{self.variableName}"
     
     def evaluateExprType(self) -> int:
         return self.variableType
@@ -164,11 +164,15 @@ class FuncCallNode:
         return self.returnType
 
 class FuncDeclNode:
-    def __init__(self, funcName, funcParams, funcBody, returnType) -> None:
-        self.funcName   = funcName
-        self.funcParams = funcParams #List of tuples[identifier, type]
-        self.funcBody   = funcBody
-        self.returnType = returnType
+    def __init__(self, funcName, funcParams, funcBody, returnType, isInlineC = False, hasVargs = None, isBuiltinInlineC = None) -> None:
+        self.funcName         = funcName
+        self.funcParams       = funcParams #List of tuples[identifier, type] if normal function definition
+        self.funcBody         = funcBody
+        self.returnType       = returnType
+        #Extra params for inline c functions
+        self.isInlineC        = isInlineC
+        self.hasVargs         = hasVargs
+        self.isBuiltinInlineC = isBuiltinInlineC
     
     def __repr__(self) -> str:
         params = ", ".join(f"{paramValue}: {paramType}" for paramValue, paramType in self.funcParams)
@@ -176,3 +180,14 @@ class FuncDeclNode:
 
     def evaluateExprType(self) -> int:
         raise NotImplementedError("No impl for func decl node")
+
+class InlineCFuncNode:
+    def __init__(self, inlineCCode, returnType) -> None:
+        self.inlineCCode = inlineCCode
+        self.returnType  = returnType
+    
+    def __repr__(self) -> str:
+        return self.inlineCCode
+
+    def evaluateExprType(self) -> int:
+        return self.returnType

@@ -27,6 +27,9 @@ EVAL_INT64 = 7
 EVAL_FLOAT32 = 8
 EVAL_FLOAT64 = 9
 
+#String
+EVAL_STRING = 10
+
 '''
 mangleFunctionName: Given a function name and the parameter types, it will mangle the function name by adding parameter types
                     to the end of the function name.
@@ -66,10 +69,33 @@ def evalTypeToString(evalType):
         EVAL_INT32:   "int32_t",
         EVAL_INT64:   "int64_t",
         EVAL_FLOAT32: "float",
-        EVAL_FLOAT64: "double"
+        EVAL_FLOAT64: "double",
+        EVAL_STRING:  "string" #Emitter handles actual initialization
     }
     
     return evalToStringMapper.get(evalType)
+
+'''
+getMaxBitWidthType: Given a type, it returns the max bit width of that type
+'''
+def getMaxBitWidthType(evalType):
+    #Mapping to maximum bit-width types
+    maxBitWidthType = {
+        EVAL_INT8: EVAL_INT64,
+        EVAL_INT16: EVAL_INT64,
+        EVAL_INT32: EVAL_INT64,
+        EVAL_INT64: EVAL_INT64,
+        EVAL_UINT8: EVAL_UINT64,
+        EVAL_UINT16: EVAL_UINT64,
+        EVAL_UINT32: EVAL_UINT64,
+        EVAL_UINT64: EVAL_UINT64,
+        EVAL_FLOAT32: EVAL_FLOAT64,
+        EVAL_FLOAT64: EVAL_FLOAT64,
+        EVAL_VOID: EVAL_VOID,
+        EVAL_STRING: EVAL_STRING
+    }
+    
+    return maxBitWidthType.get(evalType, evalType)
 
 '''
 invertIntegerType: Converts uint to int and viceversa.
@@ -157,6 +183,7 @@ Example:
 '''
 categorizedTypePriority = {
     EVAL_VOID: -1,
+    EVAL_STRING: -1,
     EVAL_UINT8: 0, EVAL_UINT16: 1, EVAL_UINT32: 2, EVAL_UINT64: 3,
     EVAL_INT8: 0, EVAL_INT16: 1, EVAL_INT32: 2, EVAL_INT64: 3,
     #Floating point numbers will be given higher priority, always
@@ -167,7 +194,8 @@ typeCategory = {
     EVAL_VOID: -1,
     EVAL_UINT8: 0, EVAL_UINT16: 0, EVAL_UINT32: 0, EVAL_UINT64: 0,
     EVAL_INT8: 1, EVAL_INT16: 1, EVAL_INT32: 1, EVAL_INT64: 1,
-    EVAL_FLOAT32: 2, EVAL_FLOAT64: 2
+    EVAL_FLOAT32: 2, EVAL_FLOAT64: 2,
+    EVAL_STRING: 3
 }
 
 def determineExpressionType(leftType, rightType, operator) -> int:
@@ -177,7 +205,7 @@ def determineExpressionType(leftType, rightType, operator) -> int:
     RTC = typeCategory[rightType]
 
     if(LTP == -1 or RTP == -1):
-        printError("TypeDeterminingError", "'void' type is not allowed for operators")
+        printError("TypeDeterminingError", f"'{evalTypeToString(leftType if LTP == -1 else rightType)}' type is currently not allowed for operators")
 
     isMinusOperator   = (operator == TOKEN_SUB)
     leftIsNotUnsigned = (leftType >= EVAL_INT8)
@@ -223,37 +251,33 @@ uintToInt = {
 }
 
 def promoteType(initialType, newType, identifier, isFunc = False):
-    if initialType == newType:
+    if(initialType == newType):
         return initialType
     
-    if(newType == EVAL_VOID or initialType == EVAL_VOID):
-        printError("TypePromotionError", f"Cannot promote to 'void' type for identifier '{identifier}'")
+    ITC = typeCategory[initialType]
+    NTC = typeCategory[newType]
+    if(ITC == -1 or NTC == -1):
+        printError("TypePromotionError", f"Cannot promote to '{evalTypeToString(initialType if ITC == -1 else newType)}' type for identifier '{identifier}'")
 
-    initialPriority = categorizedTypePriority[initialType]
-    newPriority = categorizedTypePriority[newType]
+    ITP = categorizedTypePriority[initialType]
+    NTP = categorizedTypePriority[newType]
 
     #If any type is float, promote to float
-    if initialType >= EVAL_FLOAT32 or newType >= EVAL_FLOAT32:
+    if(initialType >= EVAL_FLOAT32 or newType >= EVAL_FLOAT32):
         if isFunc:
             printWarning("TypePromotionWarning", f"Promotion of '{identifier}' return type to floating type may cause it's previous return values to loose their precision")
         else:
             printWarning("TypePromotionWarning", f"Promotion of identifier '{identifier}' to floating type may cause it's previous values to loose their precision")
 
-        return EVAL_FLOAT32 if newPriority <= categorizedTypePriority[EVAL_FLOAT32] else EVAL_FLOAT64
+        return EVAL_FLOAT32 if NTP <= categorizedTypePriority[EVAL_FLOAT32] else EVAL_FLOAT64
     
-    #Unsigned to signed conversion is allowed, with at least the same bit width
-    if initialType <= EVAL_UINT64 and newType >= EVAL_INT8:
+    #(Unsigned to signed) and (Signed to unsigned) conversion is allowed, with at least the same bit width
+    if(initialType <= EVAL_UINT64 and newType >= EVAL_INT8) or (initialType >= EVAL_INT8 and newType <= EVAL_UINT64):
         correspondingSignedType = uintToInt.get(initialType, EVAL_INT64)
         return max(correspondingSignedType, newType, key=lambda t: categorizedTypePriority[t])
     
-    #Prevent signed to unsigned conversion
-    if initialType >= EVAL_INT8 and newType <= EVAL_UINT64:
-        errorMsg = f"Cannot promote signed integer '{evalTypeToString(initialType)}' to unsigned type '{evalTypeToString(newType)}'\n"
-        errorMsg += f"[AdditionalInfo]: Tried to assign '{evalTypeToString(newType)}' type expression to identifier '{identifier}' which was previously deduced to '{evalTypeToString(initialType)}' by Transpiler"
-        printError("TypePromotionError", errorMsg)
-
     #Promote to larger bitwidth if necessary
-    if newPriority > initialPriority:
+    if(NTP > ITP):
         return newType
 
     return initialType

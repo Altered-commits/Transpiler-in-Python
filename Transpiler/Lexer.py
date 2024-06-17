@@ -19,6 +19,16 @@ class Lexer:
         self.curChar = sourceCode[self.curIndex] if self.textLen > 0 else '\0'
         self.curLine = 1
         self.curCol  = 1
+        #For char and string
+        self.escapeSequences = {
+                    'n': '\n',
+                    'r': '\r',
+                    't': '\t',
+                    '0': '\0',
+                    '"': '\"',
+                    "'": '\'',
+                    "\\": "\\"
+                }
     
     #-----------------HELPER FUNCTIONS-----------------
     #i++ but for lexer
@@ -102,15 +112,7 @@ class Lexer:
             self.advance()
             #Valid escape sequence: \n, \r, \t, \0, \", \', \\
             if(self.curChar in "nrt0'\"\\"):
-                charLiteral = {
-                    'n': '\n',
-                    'r': '\r',
-                    't': '\t',
-                    '0': '\0',
-                    '"': '\"',
-                    "'": '\'',
-                    "\\": "\\"
-                }.get(self.curChar)
+                charLiteral = self.escapeSequences.get(self.curChar)
                 self.advance()
 
             #Valid Unicode escape sequence: \uFFFF (16bit), \UFFFFFFFF (32bit)
@@ -141,6 +143,30 @@ class Lexer:
         self.advance()
         return Token(charLiteral, TOKEN_CHAR)
 
+    def lexString(self):
+        #We add `"` ourselves
+        stringLiteral = "\""
+
+        #Advance the `"`
+        self.advance()
+
+        while self.curChar != '"' and self.curChar != '\0':
+            if self.curChar == '\\':
+                self.advance()
+                escapeChar = self.curChar
+                stringLiteral += self.escapeSequences.get(escapeChar, escapeChar)
+            else:
+                stringLiteral += self.curChar
+            self.advance()
+        
+        if(self.curChar != '"'):
+            printError("LexerError", f"Unterminated string literal: \"{stringLiteral}")
+        self.advance()
+
+        #Also the ending `"`
+        stringLiteral += '"'
+        return Token(stringLiteral, TOKEN_STRING)
+
     def getToken(self) -> Token:
         while self.curChar != '\0':
             updateContext(self.curLine, self.curCol)
@@ -154,6 +180,10 @@ class Lexer:
                 self.advance()
                 return Token("-", TOKEN_SUB)
             
+            if(self.curChar == '.' and self.peekChar(1) == '.' and self.peekChar(2) == '.'):
+                self.advance(3)
+                return Token("...", TOKEN_ELLIPSIS)
+
             if(self.curChar.isdigit() or self.curChar == '.'):
                 return self.lexNumeric()
             
@@ -162,6 +192,9 @@ class Lexer:
             
             if(self.curChar == "'"):
                 return self.lexChar()
+
+            if(self.curChar == '"'):
+                return self.lexString()
 
             tokenValue = self.curChar
             self.advance()

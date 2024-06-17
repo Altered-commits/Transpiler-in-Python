@@ -3,7 +3,7 @@ import Parser
 import Emitter
 import Printer
 import argparse
-# import Lexer
+import time
 
 transpilerArgs = argparse.ArgumentParser(description="Transpile the given file into C Code")
 transpilerArgs.add_argument("filename", help="Name of the file to be transpiled. ext -> .txt")
@@ -18,11 +18,16 @@ try:
 except (FileNotFoundError, OSError):
     Printer.printError("Transpiler", f"File not found to transpile: {args.filename}")
 
+start = time.perf_counter()
+
 preprocessor = Preprocessor.Preprocessor(fileContent)
-parser       = Parser.Parser(preprocessor.preprocess())
-emitter      = Emitter.Emitter(parser.parse())
+preprocessedCode, cIncludeFiles = preprocessor.preprocess()
+parser       = Parser.Parser(preprocessedCode)
+emitter      = Emitter.Emitter(parser.parse(), cIncludeFiles)
+
+end = time.perf_counter()
 
 with open("Generated.c", "w") as outFile:
     outFile.write(emitter.emit())
 
-Printer.printSuccess("Successfully converted the code to C Language, check 'Generated.c' file")
+Printer.printSuccess(f"Successfully converted the code to C Language. Time to transpile: {(end - start) * 1000} milliseconds")

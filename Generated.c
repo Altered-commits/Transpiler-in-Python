@@ -1,19 +1,25 @@
+#include <stdio.h>
 #include <stdint.h>
 
-uint8_t c = 0;
-float d = 3.14159 / 2.71828;
-
-uint8_t fibUC(uint8_t x)
+int64_t fibonacciUC(uint8_t n)
 {
-    if (x == 1) {
-        return 1;
+    if (n < 0) {
+        printf("Fibonacci cannot be negative");
+        return -1;
     }
-    return fibUC(x - 2) + fibUC(x - 1);
+    if (n == 0 || n == 1) {
+        return n;
+    }
+    return fibonacciUC(n - 1) + fibonacciUC(n - 2);
 }
 
 int main(void)
 {
-    uint8_t output = fibUC(5);
+    uint8_t a = 0;
+    char b[128];
+
+    fgets(b, sizeof(b), stdin);
+    printf("Factorial of a is: %d", fibonacciUC(a));
 
     return 0;
 }

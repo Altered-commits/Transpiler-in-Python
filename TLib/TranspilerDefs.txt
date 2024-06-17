@@ -1,0 +1,20 @@
+define true  1
+define false 0
+define null  -1
+
+define void    null
+
+define uint8   0
+define uint16  1
+define uint32  2
+define uint64  3
+
+define int8    4
+define int16   5
+define int32   6
+define int64   7
+
+define float   8
+define double  9
+
+define string 10

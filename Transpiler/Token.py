@@ -6,6 +6,7 @@ TOKEN_IDENTIFIER = 0
 TOKEN_INT       = 1
 TOKEN_FLOAT     = 2
 TOKEN_CHAR      = 3
+TOKEN_STRING    = 4
 
 #Binary Operators (Identification starts from '20')
 TOKEN_ADD = 20
@@ -25,12 +26,14 @@ TOKEN_CMP_LT   = 35
 TOKEN_CMP_LTEQ = 36
 
 #Symbols (Identification starts from '50')
-TOKEN_SEMIC  = 50
-TOKEN_LPAREN = 51
-TOKEN_RPAREN = 52
-TOKEN_LBRACE = 53
-TOKEN_RBRACE = 54
-TOKEN_COMMA  = 55
+TOKEN_SEMIC    = 50
+TOKEN_COLON    = 51
+TOKEN_LPAREN   = 52
+TOKEN_RPAREN   = 53
+TOKEN_LBRACE   = 54
+TOKEN_RBRACE   = 55
+TOKEN_COMMA    = 56
+TOKEN_ELLIPSIS = 58
 
 #Keywords (Identification starts from '60')
 TOKEN_KEYWORD_VAR = 60
@@ -80,6 +83,7 @@ stringToTokenValue = {
     ">=": TOKEN_CMP_GTEQ,
 
     ";": TOKEN_SEMIC,
+    ":": TOKEN_COLON,
     "(": TOKEN_LPAREN,
     ")": TOKEN_RPAREN,
     "{": TOKEN_LBRACE,
@@ -133,6 +137,8 @@ Optimizing it so it doesnt have to check for multiple variables and can just use
 
 Mainly used for parseCommonBinaryOperations in Parser.py
 '''
+#Used in 'parseAtom'
+PRIMITIVE_GROUP   = (1 << TOKEN_INT) | (1 << TOKEN_FLOAT) | (1 << TOKEN_CHAR) | (1 << TOKEN_STRING)
 #'NOT' handled seperately
 LOGICAL_GROUP     = (1 << TOKEN_KEYWORD_AND) | (1 << TOKEN_KEYWORD_OR)
 COMPARISION_GROUP = (1 << TOKEN_CMP_EQ) | (1 << TOKEN_CMP_NEQ) | (1 << TOKEN_CMP_GT) |\

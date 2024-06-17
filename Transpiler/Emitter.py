@@ -1,5 +1,5 @@
 from Node import *
-from EvalTypes import evalTypeToString
+from EvalTypes import evalTypeToString, EVAL_STRING
 from Printer   import printError
 from Token     import tokenOperatorsToString
 
@@ -19,10 +19,11 @@ class Emitter:
         return 0;
     }
     '''
-    def __init__(self, parsedCode) -> None:
+    def __init__(self, parsedCode, cIncludeFiles) -> None:
         self.statements       = parsedCode[0]
         self.funcs            = parsedCode[1].values()
         self.globalVars       = parsedCode[2].values()
+        self.cIncludeFiles    = cIncludeFiles
         #String repr to be written to file
         self.code             = ""
         self.indentationLevel = 0
@@ -80,8 +81,9 @@ class Emitter:
         self.code += "}\n\n"
 
     def emitHeader(self) -> None:
-        #Right now the only usefull header file is <stdint.h>
-        self.code += "#include <stdint.h>\n\n"
+        for i in self.cIncludeFiles:
+            self.code += f"#include <{i}>\n"
+        self.code += "#include <stdint.h>\n"
     
     def emitMainFunction(self) -> None:
         #Start of main function
@@ -193,15 +195,35 @@ class Emitter:
             self.code += f"{self.getIndentation()}{node.variableName} = "
             self.emitExpression(node.assignExpr)
         else:
-            cType = evalTypeToString(node.variableType)
-            if cType is None:
-                printError("EmitterError", f"Unsupported cType: {node.variableType}")
+            #String needs special initialization
+            if(node.variableType == EVAL_STRING):
+                bufferSize = 128 #Default buffer size for empty string initializations
+                stringLen  = 0
+                #Strings cannot be with other operators, hence when we assign a string, chances are, its going to be a single value node
+                if(isinstance(node.assignExpr, ValueNode)):
+                    #An empty string only consists of two quotes, min size -> 2
+                    stringLen = len(node.assignExpr.value)
+                    if stringLen != 2:
+                        self.code += f"{self.getIndentation()}char {node.variableName}[{stringLen - 1}] = {node.assignExpr}"
+                    else:
+                        self.code += f"{self.getIndentation()}char {node.variableName}[{bufferSize}]"
+                else:
+                    printError("EmitterError", "Found other node instead of ValueNode for string")
             
-            self.code += f"{self.getIndentation()}{cType} {node.variableName} = "
-            self.emitExpression(node.assignExpr)
+            #For other variables its normal initialization
+            else:
+                cType = evalTypeToString(node.variableType)
+                if cType is None:
+                    printError("EmitterError", f"Unsupported cType: {node.variableType}")
+                
+                self.code += f"{self.getIndentation()}{cType} {node.variableName} = "
+                self.emitExpression(node.assignExpr)
     
     def emitExpression(self, node) -> None:
-        if isinstance(node, BinaryOperationNode):
+        if(isinstance(node, InlineCFuncNode)):
+            self.code += f"{node.inlineCCode}"
+
+        elif isinstance(node, BinaryOperationNode):
             self.emitExpression(node.leftExpr)
             self.code += f" {tokenOperatorsToString[node.operator]} "
             self.emitExpression(node.rightExpr)

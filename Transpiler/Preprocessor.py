@@ -1,4 +1,5 @@
 from Printer import printPreprocessorError, printWarning
+from typing import Tuple
 
 class Preprocessor:
     '''
@@ -13,16 +14,26 @@ class Preprocessor:
         self.macros        = dict()
         self.includedFiles = set()
         self.outputString  = str()
+        self.cIncludeFiles = set()
     
-    def preprocess(self) -> str:
+    def preprocess(self) -> Tuple[str, set[str]]:
         self.preprocessInternal(self.sourceCode)
-        return self.outputString
+        return self.outputString, self.cIncludeFiles
 
     def preprocessInternal(self, source) -> None:
         for line in source:
             strippedLine = line.strip(' \n')
+
+            if(strippedLine.startswith('__c_include__')):
+                cIncludePath = strippedLine[14:].strip()
+                
+                if(cIncludePath in self.cIncludeFiles):
+                    printWarning("PreprocessorWarning", f"'{filePath}' was already included before, ignoring this '__c_include__' directive")
+                    continue
+                    
+                self.cIncludeFiles.add(cIncludePath)
             
-            if(strippedLine.startswith("include")):
+            elif(strippedLine.startswith("include")):
                 includePath = strippedLine[8:].strip()
                 filePath    = includePath.replace('.', '/') + ".txt"
 
