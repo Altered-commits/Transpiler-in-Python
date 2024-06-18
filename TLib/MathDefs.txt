@@ -1,2 +1,34 @@
+__c_include__ math.h
+
+include TLib.TranspilerDefs
+
 define PI 3.14159
 define E  2.71828
+
+func<__inline_c__, double> factorial(x: double) {
+    tgamma(x + 1)
+}
+
+func<__inline_c__, double> ceil(x: double) {
+    ceil(x)
+}
+
+func<__inline_c__, double> floor(x: double) {
+    floor(x)
+}
+
+func<__inline_c__, double> abs(x: double) {
+    fabs(x)
+}
+
+func<__inline_c__, double> sin(x: double) {
+    sin(x)
+}
+
+func<__inline_c__, double> cos(x: double) {
+    cos(x)
+}
+
+func<__inline_c__, double> tan(x: double) {
+    tan(x)
+}

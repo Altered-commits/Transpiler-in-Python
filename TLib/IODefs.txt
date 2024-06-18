@@ -6,6 +6,6 @@ define __inline_printf__ 0
 define __inline_scanf__  1
 define __inline_fgets__  2
 
-func<__inline_c__, __inline_printf__, int32> print(fmt: string, ...);
-func<__inline_c__, __inline_scanf__,  int32> input(...);
-func<__inline_c__, __inline_fgets__,  int32> stringInput(...);
+func<__inline_c__, __inline_printf__, int32>  print(fmt: string, ...);
+func<__inline_c__, __inline_scanf__,  int32>  input(...);
+func<__inline_c__, __inline_fgets__,  string> stringInput(...);

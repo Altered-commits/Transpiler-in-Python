@@ -480,10 +480,10 @@ class Parser:
                 printError("ParserError", "'__inline_c__' function with body expects 2 inline paramters: '__inline_c__', 'return_type'")            
 
             self.advance() #Advance past the '{'
-            funcBody   = ""
+            funcBody = []
 
             while self.currentToken.tokenType != TOKEN_EOF and self.currentToken.tokenType != TOKEN_RBRACE:
-                funcBody += self.currentToken
+                funcBody.append(self.currentToken)
                 self.advance()
             
             if(self.currentToken.tokenType != TOKEN_RBRACE):
@@ -515,8 +515,19 @@ class Parser:
         if(funcDecl.funcBody is None):
             return InlineCFuncNode(builtinCFunc(funcDecl, arguments), funcDecl.returnType)
 
-        print(funcDecl, funcDecl.isBuiltinInlineC)
-        exit(1)
+        #Inline with function body (list of strings)
+        inlineCCode = ""
+        #Parameter is tuple of identifier and datatype, arg is a ast node
+        paramReplacementDict = {param[0]: arg.__repr__() for param, arg in zip(funcDecl.funcParams, arguments)}
+        
+        #funcBody -> List[Token]
+        for token in funcDecl.funcBody:
+            if(token.tokenType == TOKEN_COMMA):
+                inlineCCode += ", "
+            else:
+                inlineCCode += paramReplacementDict.get(token.tokenValue, token.tokenValue)
+
+        return InlineCFuncNode(inlineCCode, funcDecl.returnType)
 
     #-----------PARSING METHODS DOWN BELOW-----------
     def parse(self):

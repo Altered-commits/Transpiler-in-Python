@@ -19,16 +19,6 @@ class Lexer:
         self.curChar = sourceCode[self.curIndex] if self.textLen > 0 else '\0'
         self.curLine = 1
         self.curCol  = 1
-        #For char and string
-        self.escapeSequences = {
-                    'n': '\n',
-                    'r': '\r',
-                    't': '\t',
-                    '0': '\0',
-                    '"': '\"',
-                    "'": '\'',
-                    "\\": "\\"
-                }
     
     #-----------------HELPER FUNCTIONS-----------------
     #i++ but for lexer
@@ -112,7 +102,16 @@ class Lexer:
             self.advance()
             #Valid escape sequence: \n, \r, \t, \0, \", \', \\
             if(self.curChar in "nrt0'\"\\"):
-                charLiteral = self.escapeSequences.get(self.curChar)
+                escapeSequences = {
+                    'n': '\n',
+                    'r': '\r',
+                    't': '\t',
+                    '0': '\0',
+                    '"': '\"',
+                    "'": '\'',
+                    "\\": "\\"
+                }
+                charLiteral = escapeSequences.get(self.curChar)
                 self.advance()
 
             #Valid Unicode escape sequence: \uFFFF (16bit), \UFFFFFFFF (32bit)
@@ -150,11 +149,21 @@ class Lexer:
         #Advance the `"`
         self.advance()
 
+        #Strings escape sequence should not affect code generation, hence they are raw escape sequence
+        rawEscapeSequences = {
+            'n': '\\n',
+            'r': '\\r',
+            't': '\\t',
+            '0': '\\0',
+            '"': '\\"',
+            "'": "\\'",
+            "\\": "\\\\"
+        }
+
         while self.curChar != '"' and self.curChar != '\0':
             if self.curChar == '\\':
                 self.advance()
-                escapeChar = self.curChar
-                stringLiteral += self.escapeSequences.get(escapeChar, escapeChar)
+                stringLiteral += rawEscapeSequences.get(self.curChar, self.curChar)
             else:
                 stringLiteral += self.curChar
             self.advance()

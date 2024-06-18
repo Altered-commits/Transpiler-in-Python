@@ -1,0 +1,19 @@
+__c_include__ string.h
+
+include TLib.TranspilerDefs
+
+func<__inline_c__, string> stringLength(in: string) {
+    strlen(in)
+}
+
+func<__inline_c__, int32> stringCompare(in1: string, in2: string) {
+    strcmp(in1, in2)
+}
+
+func<__inline_c__, string> stringCopy(dest: string, src: string) {
+    strcpy(dest, src)
+}
+
+func<__inline_c__, string> stringConcat(dest: string, src: string) {
+    strcat(dest, src)
+}

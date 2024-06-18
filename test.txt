@@ -1,29 +1,17 @@
 include TLib.IODefs
+include TLib.MathDefs
 
-func fibonacci(n)
-{
-    if n < 0 {
-        print("Fibonacci cannot be negative");
-        return null;
-    }
+var b = 0.0;
+var a = 0.0;
+var c = 0.0;
 
-    if n == 0 or n == 1 {
-        return n;
-    }
+input(a, b);
 
-    return fibonacci(n - 1) + fibonacci(n - 2);
-}
+c = cos(a) + sin(b);
 
-var a = 0;
-var b = "";
+print("cos + sin of a and b is: %lf", c);
 
-stringInput(b);
-print("Factorial of a is: %d", fibonacci(a));
+var d = 0.0;
 
-do {
-    var a = 11;
-    a = a + 1;
-
-    print("%d", a);
-
-} while a != 20;
+input(d);
+print("Factorial of d is: %lf", factorial(d));
