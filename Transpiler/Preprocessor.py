@@ -22,7 +22,11 @@ class Preprocessor:
 
     def preprocessInternal(self, source) -> None:
         for line in source:
+            line = self.removeComments(line)
             strippedLine = line.strip(' \n')
+
+            if(strippedLine == ""):
+                continue
 
             if(strippedLine.startswith('__c_include__')):
                 cIncludePath = strippedLine[14:].strip()
@@ -92,3 +96,9 @@ class Preprocessor:
                 i += 1
 
         return ''.join(result)
+    
+    def removeComments(self, line):
+        commentStart = line.find('//')
+        if commentStart != -1:
+            line = line[:commentStart]
+        return line

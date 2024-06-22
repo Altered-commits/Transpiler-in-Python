@@ -1,17 +1,18 @@
 include TLib.IODefs
 include TLib.MathDefs
 
+/// Testing comments
+
+//Declare three variables of float type
 var b = 0.0;
 var a = 0.0;
 var c = 0.0;
 
+//Input to two variables a and b
 input(a, b);
 
+//do trignometry
 c = cos(a) + sin(b);
 
+//print output
 print("cos + sin of a and b is: %lf", c);
-
-var d = 0.0;
-
-input(d);
-print("Factorial of d is: %lf", factorial(d));

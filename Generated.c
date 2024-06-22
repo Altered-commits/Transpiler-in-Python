@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdint.h>
 
 int main(void)
@@ -13,11 +13,6 @@ int main(void)
     c = cos(a) + sin(b);
 
     printf("cos + sin of a and b is: %lf", c);
-
-    float d = 0.0;
-
-    scanf("%f", &d);
-    printf("Factorial of d is: %lf", tgamma(d+1));
 
     return 0;
 }
