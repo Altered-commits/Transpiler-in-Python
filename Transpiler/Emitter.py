@@ -1,4 +1,4 @@
-from Node import *
+from Node      import *
 from EvalTypes import evalTypeToString, EVAL_STRING
 from Printer   import printError
 from Token     import tokenOperatorsToString

@@ -2,7 +2,7 @@
 All valid nodes for AST defined here. Function used for Semantic Analysis built in the Node Types -> evaluateExprType
 '''
 from EvalTypes import determineExpressionType, invertIfIntegerType, EVAL_UINT8
-from Token     import TOKEN_SUB, TOKEN_KEYWORD_NOT
+from Token     import TOKEN_SUB, TOKEN_KEYWORD_NOT, tokenOperatorsToString
 from Printer   import printError
 
 #All node types defined here
@@ -24,7 +24,7 @@ class BinaryOperationNode:
         self.rightExpr = rightExpr
     
     def __repr__(self) -> str:
-        return f"({self.leftExpr} {self.operator} {self.rightExpr})"
+        return f"({self.leftExpr} {tokenOperatorsToString.get(self.operator)} {self.rightExpr})"
     
     def evaluateExprType(self) -> int:
         leftExprType  = self.leftExpr.evaluateExprType()
@@ -38,7 +38,7 @@ class UnaryOperationNode:
         self.rightExpr = rightExpr
     
     def __repr__(self) -> str:
-        return f"({self.operator} {self.rightExpr})"
+        return f"({tokenOperatorsToString.get(self.operator)} {self.rightExpr})"
     
     def evaluateExprType(self) -> int:
         rightExprType = self.rightExpr

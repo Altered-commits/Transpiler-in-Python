@@ -13,12 +13,13 @@ class Lexer:
             \t- '10' : Integer\n
     '''
     def __init__(self, sourceCode: str) -> None:
-        self.text     = sourceCode
-        self.textLen  = len(sourceCode)
-        self.curIndex = 0
-        self.curChar = sourceCode[self.curIndex] if self.textLen > 0 else '\0'
-        self.curLine = 1
-        self.curCol  = 1
+        self.text       = sourceCode
+        self.textLen    = len(sourceCode)
+        self.curIndex   = 0
+        self.curChar    = sourceCode[self.curIndex] if self.textLen > 0 else '\0'
+        self.curLine    = 1
+        self.curCol     = 1
+        self.minusCount = 1
     
     #-----------------HELPER FUNCTIONS-----------------
     #i++ but for lexer
@@ -183,7 +184,9 @@ class Lexer:
 
             #We handle - manually, if we have number after - its a negative number, else its minus symbol
             if(self.curChar == '-'):
-                if(self.peekChar(1).isdigit()):
+                self.minusCount += 1
+
+                if(self.peekChar(1).isdigit() and self.minusCount != 1):
                     return self.lexNumeric()
                 
                 self.advance()
@@ -194,12 +197,15 @@ class Lexer:
                 return Token("...", TOKEN_ELLIPSIS)
 
             if(self.curChar.isdigit() or self.curChar == '.'):
+                self.minusCount = 0
                 return self.lexNumeric()
             
             if(self.curChar.isalpha() or self.curChar == "_"):
+                self.minusCount = 0
                 return self.lexIdentifierOrKeyword()
             
             if(self.curChar == "'"):
+                self.minusCount = 0
                 return self.lexChar()
 
             if(self.curChar == '"'):

@@ -1,18 +1,17 @@
 include TLib.IODefs
-include TLib.MathDefs
 
-/// Testing comments
+func my_function(a, b)
+{
+    for var i = a; i < b; i = i + 1 {
+        print("Inside function loop: %f\n", i);
+    }
+}
 
-//Declare three variables of float type
+var c = 10;
+var a = 0.0 - c - 1;
 var b = 0.0;
-var a = 0.0;
-var c = 0.0;
 
-//Input to two variables a and b
 input(a, b);
 
-//do trignometry
-c = cos(a) + sin(b);
-
-//print output
-print("cos + sin of a and b is: %lf", c);
+my_function(a, b);
+my_function(1.5, 10.5);
