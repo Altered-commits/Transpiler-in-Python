@@ -1,14 +1,19 @@
 include TLib.IODefs
 
+func do_print(a) {
+    print("Inside function loop: {} + {}\n", a, a + 1);
+}
+
 func my_function(a, b)
 {
-    for var i = a; i < b; i = i + 1 {
-        print("Inside function loop: %f\n", i);
+    for var i = a; i < b; i = i + 1 
+    {
+        do_print(i);
     }
 }
 
 var c = 10;
-var a = 0.0 - c - 1;
+var a = c - 1 - 8;
 var b = 0.0;
 
 input(a, b);

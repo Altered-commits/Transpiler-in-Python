@@ -64,13 +64,21 @@ class Lexer:
 
     #-----------------LEXING FUNCTIONS-----------------
     def lexNumeric(self) -> Token:
-        dotCount = 0
+        dotCount   = 0
+        digitCount = 0
         startPos = self.curIndex
 
         #Allow '-' character as well
         while (self.curChar.isdigit() or self.curChar in '.-'):
             if(self.curChar == '.'):
                 dotCount += 1
+            
+            elif(self.curChar != '-'):
+                digitCount += 1
+
+            elif(self.curChar == '-' and digitCount != 0):
+                break
+
             self.advance()
     
         if(dotCount > 1):
@@ -86,7 +94,7 @@ class Lexer:
             self.advance()
         
         lexedText = self.text[startPos : self.curIndex]
-        tokenType = keywordToTokenValue.get(lexedText, TOKEN_IDENTIFIER)
+        tokenType = keywordToTokenType.get(lexedText, TOKEN_IDENTIFIER)
         
         return Token(lexedText, tokenType)
 
@@ -182,11 +190,11 @@ class Lexer:
             updateContext(self.curLine, self.curCol)
             self.skipSpaces()
 
-            #We handle - manually, if we have number after - its a negative number, else its minus symbol
+            #We handle - manually, if we have number after - its a negative number, else its minus symbol 4-1
             if(self.curChar == '-'):
                 self.minusCount += 1
 
-                if(self.peekChar(1).isdigit() and self.minusCount != 1):
+                if(self.peekChar(1).isdigit() and self.minusCount > 1):
                     return self.lexNumeric()
                 
                 self.advance()
@@ -219,7 +227,7 @@ class Lexer:
                 tokenValue += '='
                 self.advance()
             
-            tokenType = stringToTokenValue.get(tokenValue)
+            tokenType = operatorToTokenType.get(tokenValue)
             if(tokenType == None):
                 printError("LexerError", f"{tokenValue} is not a supported token")
             

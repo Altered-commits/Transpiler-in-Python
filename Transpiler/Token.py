@@ -67,8 +67,8 @@ class Token:
     def __repr__(self) -> str:
         return f"{self.tokenValue}: {self.tokenType}"
 
-#String to Token Value mapper
-stringToTokenValue = {
+#Operator to Token Type mapper
+operatorToTokenType = {
     "+": TOKEN_ADD,
     #'-': handled in getToken()
     "*": TOKEN_MUL,
@@ -113,8 +113,8 @@ tokenOperatorsToString = {
     TOKEN_KEYWORD_NOT: "!"
 }
 
-#Keyword to token value mapper
-keywordToTokenValue = {
+#Keyword to Token Type Mapper
+keywordToTokenType = {
     "var"   : TOKEN_KEYWORD_VAR,
     "and"   : TOKEN_KEYWORD_AND,
     "or"    : TOKEN_KEYWORD_OR,
@@ -138,6 +138,18 @@ Grouping tokens into a single variable according to their precedance for binary 
 Optimizing it so it doesnt have to check for multiple variables and can just use bitwise operators to solve precedance
 
 Mainly used for parseCommonBinaryOperations in Parser.py
+
+Example: Primitive group
+>>> 1 << 1 | 1 << 2 | 1 << 3 | 1 << 4
+
+>>> 00010 | 00100 | 01000 | 10000
+>>> 00110 | 11000
+>>> 11110 (final binary repr)
+
+Lets say i need to check if the current 'TOKEN_INT' belongs to this group
+>>> PRIMITIVE_GROUP & (1 << TOKEN_INT)
+>>> 11110 & 00010
+>>> 00010 (True)
 '''
 #Used in 'parseAtom'
 PRIMITIVE_GROUP   = (1 << TOKEN_INT) | (1 << TOKEN_FLOAT) | (1 << TOKEN_CHAR) | (1 << TOKEN_STRING)

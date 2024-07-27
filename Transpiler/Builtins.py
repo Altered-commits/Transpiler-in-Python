@@ -6,9 +6,30 @@ from EvalTypes import evalTypeToString, EVAL_FLOAT32, EVAL_FLOAT64, EVAL_INT8, E
                                         EVAL_UINT8, EVAL_UINT16, EVAL_UINT32, EVAL_UINT64, EVAL_STRING, EVAL_VOID
 from Node      import VariableAccessNode
 
+import re
+
 INLINE_PRINTF = 0
 INLINE_SCANF  = 1
 INLINE_FGETS  = 2
+
+#Used in print and input
+formatMap = {
+        EVAL_FLOAT32: "%f",          #float
+        EVAL_FLOAT64: "%lf",         #double
+        EVAL_INT8:    "%hhd",        #signed char
+        EVAL_INT16:   "%hd",         #short
+        EVAL_INT32:   "%d",          #int
+        EVAL_INT64:   "%lld",        #long long
+        EVAL_UINT8:   "%hhu",        #unsigned char
+        EVAL_UINT16:  "%hu",         #unsigned short
+        EVAL_UINT32:  "%u",          #unsigned int
+        EVAL_UINT64:  "%llu",        #unsigned long long
+        EVAL_STRING:  "%s"           #string (char array)
+    }
+
+#Compile the regular expressions
+percentPattern = re.compile(r'%(?!%)')
+bracePattern   = re.compile(r'\{(?!\{)\}')
 
 def builtinCFunc(func, args): #func -> FuncDeclNode, args -> Any valid AST node
     funcType = func.isBuiltinInlineC
@@ -34,11 +55,29 @@ def builtinPrintFormatting(func, args):
         printError("BuiltinError", f"First argument of 'print' needs to be a string type, got '{evalTypeToString(firstArgType)}'")
     
     #Initial function name
-    funcName = f"printf({userArgs[0]}"
-    hasVargs = len(userArgs) > 1
-    vargs = []
+    userFmtString = userArgs[0].__repr__()
+    lenVargs      = len(userArgs) - 1
+    vargs         = []
 
-    if(hasVargs):
+    #Build the format string
+    percentPlaceholders = percentPattern.findall(userFmtString)
+    bracePlaceholders   = bracePattern.findall(userFmtString)
+    #If the number of format options dont match the number of vargs, error
+    if((len(percentPlaceholders) + len(bracePlaceholders)) != lenVargs):
+        printError("BuiltinError", f"Number of format options in 'print' function not equal to number of vargs provided to function")
+
+    #Replace all occurences of {} with their corresponding varg type (%s, %d, etc.)    
+    i = 1 #Starting after the fmt string
+    def replaceBrace(match):
+        nonlocal i
+        formatSymbol = formatMap.get(userArgs[i].evaluateExprType())
+        i += 1
+        return formatSymbol
+    
+    fmtString = bracePattern.sub(replaceBrace, userFmtString)
+    funcName  = f"printf({fmtString}"
+
+    if(lenVargs):
         for i in userArgs[1:]:
             vargs.append(i.__repr__())
 
@@ -50,21 +89,6 @@ def builtinPrintFormatting(func, args):
     return funcName
 
 def builtinScanFormatting(args):
-    #Formats such as %d, %c, etc.
-    formatMap = {
-        EVAL_FLOAT32: "%f",          #float
-        EVAL_FLOAT64: "%lf",         #double
-        EVAL_INT8:    "%hhd",        #signed char
-        EVAL_INT16:   "%hd",         #short
-        EVAL_INT32:   "%d",          #int
-        EVAL_INT64:   "%lld",        #long long
-        EVAL_UINT8:   "%hhu",        #unsigned char
-        EVAL_UINT16:  "%hu",         #unsigned short
-        EVAL_UINT32:  "%u",          #unsigned int
-        EVAL_UINT64:  "%llu",        #unsigned long long
-        EVAL_STRING:  "%s"           #string (char array)
-    }
-
     #Few things for scanf, we need to generate formatted string on our own
     #Second, we only want variables to be present (VariableAccessNode specifically), for address
     if(args == []):
