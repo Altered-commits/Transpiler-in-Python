@@ -190,7 +190,7 @@ class Lexer:
             updateContext(self.curLine, self.curCol)
             self.skipSpaces()
 
-            #We handle - manually, if we have number after - its a negative number, else its minus symbol 4-1
+            #We handle - manually, if we have number after - its a negative number, else its minus symbol
             if(self.curChar == '-'):
                 self.minusCount += 1
 

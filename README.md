@@ -3,12 +3,14 @@
 This Python transpiler converts custom language to C code. Made as a college project by two `2nd-year completed` individuals.
 
 ## Features
-1. Preprocessor capable of handling `include` and `define` directives without the need for '#' symbol. Can access files within folders using '.' syntax.
+1. Preprocessor capable of handling `include` and `define` directives without the need for '#' symbol. Can access files within folders using '.' syntax. It also processes single line comments.
 2. Transpiler capable of handling:
-    - Primitive types such as ints, floats, chars.
-    - Variable assignments and re-assignments.
+    - Primitive types such as ints, floats, chars, strings.
+    - Variable assignments, re-assignments and globals.
     - Arithmetic, Logical and Comparision operators.
     - if-elif-else condition.
+    - for, while and do-while loops.
+    - user defined and built-in functions.
 
 ## Usage
 

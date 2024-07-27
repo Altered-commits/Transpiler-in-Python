@@ -8,15 +8,15 @@ import time
 transpilerArgs = argparse.ArgumentParser(description="Transpile the given file into C Code")
 transpilerArgs.add_argument("filename", help="Name of the file to be transpiled. [ext -> .txt]")
 
-# args = transpilerArgs.parse_args()
+args = transpilerArgs.parse_args()
 
 fileContent = None
 
 try:
-    with open(r"C:\Users\lalit\Desktop\all python stuff\NTCC\test.txt", "r") as inFile:
+    with open(args.filename, "r") as inFile:
         fileContent = inFile.readlines()
 except (FileNotFoundError, OSError):
-    Printer.printError("Transpiler", f"File not found to transpile: text.txt")
+    Printer.printError("Transpiler", f"File not found to transpile: {args.filename}")
 
 start = time.perf_counter()
 
