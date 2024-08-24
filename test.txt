@@ -12,8 +12,8 @@ func my_function(a, b)
     }
 }
 
-var c = 10;
-var a = c - 1 - 8;
+var c = --18000;
+var a = c -1 --8;
 var b = 0.0;
 
 input(a, b);

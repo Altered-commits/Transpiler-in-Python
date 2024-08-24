@@ -19,7 +19,7 @@ class Lexer:
         self.curChar    = sourceCode[self.curIndex] if self.textLen > 0 else '\0'
         self.curLine    = 1
         self.curCol     = 1
-        self.minusCount = 1
+        self.minusCount = 0
     
     #-----------------HELPER FUNCTIONS-----------------
     #i++ but for lexer
@@ -104,7 +104,7 @@ class Lexer:
         self.advance()
 
         if(self.curChar == "'"):
-            printError("LexerError", "Quoted string should contain atleast one character or escape sequence")
+            printError("LexerError", "Quoted character literal should contain atleast one character or escape sequence")
 
         #Escape sequence
         if(self.curChar == '\\'):
@@ -194,7 +194,7 @@ class Lexer:
             if(self.curChar == '-'):
                 self.minusCount += 1
 
-                if(self.peekChar(1).isdigit() and self.minusCount > 1):
+                if(self.peekChar(1).isdigit() and self.minusCount > 2):
                     return self.lexNumeric()
                 
                 self.advance()
