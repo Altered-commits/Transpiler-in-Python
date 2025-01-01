@@ -183,19 +183,17 @@ Example:
 '''
 categorizedTypePriority = {
     EVAL_VOID: -1,
-    EVAL_STRING: -1,
     EVAL_UINT8: 0, EVAL_UINT16: 1, EVAL_UINT32: 2, EVAL_UINT64: 3,
     EVAL_INT8: 0, EVAL_INT16: 1, EVAL_INT32: 2, EVAL_INT64: 3,
     #Floating point numbers will be given higher priority, always
     EVAL_FLOAT32: 4, EVAL_FLOAT64: 5
 }
-
+#^^^ strings will be handled seperately vvv
 typeCategory = {
     EVAL_VOID: -1,
     EVAL_UINT8: 0, EVAL_UINT16: 0, EVAL_UINT32: 0, EVAL_UINT64: 0,
     EVAL_INT8: 1, EVAL_INT16: 1, EVAL_INT32: 1, EVAL_INT64: 1,
-    EVAL_FLOAT32: 2, EVAL_FLOAT64: 2,
-    EVAL_STRING: 3
+    EVAL_FLOAT32: 2, EVAL_FLOAT64: 2
 }
 
 def determineExpressionType(leftType, rightType, operator) -> int:
@@ -240,6 +238,7 @@ def determineExpressionType(leftType, rightType, operator) -> int:
 promoteType: Given a inital type and a new type, it will safely promote the initial type to new type
              based on certain rules provided
             -Will throw an error if it cannot be promoted to the given type
+            -Can be used as a check for implicit casting
 '''
 
 #Mapping from unsigned to signed types with the same bit width
@@ -250,14 +249,27 @@ uintToInt = {
     EVAL_UINT64: EVAL_INT64
 }
 
-def promoteType(initialType, newType, identifier, isFunc = False):
+def promoteType(initialType, newType, identifier, isFunc = False, isArgumentType = False):
     if(initialType == newType):
         return initialType
-    
+
+    #Handle strings
+    if(initialType == EVAL_STRING or newType == EVAL_STRING):
+        if(initialType == EVAL_STRING and newType == EVAL_STRING):
+            return EVAL_STRING
+        else: #One of it is string and other isn't, its an error
+            if isArgumentType:
+                return -1
+            else:
+                printError("TypePromotionError", f"Cannot promote '{evalTypeToString(initialType)}' to '{evalTypeToString(initialType)}'. String cannot be promoted to other types")
+
     ITC = typeCategory[initialType]
     NTC = typeCategory[newType]
     if(ITC == -1 or NTC == -1):
-        printError("TypePromotionError", f"Cannot promote to '{evalTypeToString(initialType if ITC == -1 else newType)}' type for identifier '{identifier}'")
+        if(isArgumentType): #Used as implicit casting check for Inline C Code
+            return -1
+        else:
+            printError("TypePromotionError", f"Cannot promote to '{evalTypeToString(initialType if ITC == -1 else newType)}' type for identifier '{identifier}'")
 
     ITP = categorizedTypePriority[initialType]
     NTP = categorizedTypePriority[newType]
@@ -266,6 +278,9 @@ def promoteType(initialType, newType, identifier, isFunc = False):
     if(initialType >= EVAL_FLOAT32 or newType >= EVAL_FLOAT32):
         if isFunc:
             printWarning("TypePromotionWarning", f"Promotion of '{identifier}' return type to floating type may cause it's previous return values to loose their precision")
+        elif isArgumentType:
+            if(newType < EVAL_FLOAT32):
+                printWarning("TypePromotionWarning", f"Promotion of '{identifier}' of type '{evalTypeToString(initialType)}' to '{evalTypeToString(newType)}' type may cause its precision to be lost")
         else:
             printWarning("TypePromotionWarning", f"Promotion of identifier '{identifier}' to floating type may cause it's previous values to loose their precision")
 

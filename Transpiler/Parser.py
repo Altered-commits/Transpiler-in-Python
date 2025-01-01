@@ -1,6 +1,6 @@
 from Lexer         import *
 from Node          import *
-from EvalTypes     import deduceType, promoteType, mangleFunctionName, getMaxBitWidthType, EVAL_VOID, EVAL_STRING
+from EvalTypes     import deduceType, promoteType, mangleFunctionName, evalTypeToString, getMaxBitWidthType, EVAL_VOID, EVAL_STRING
 from typing        import Tuple
 from TokenAdvancer import TokenAdvancer
 from Context       import FunctionContext
@@ -518,8 +518,23 @@ class Parser:
         #Inline with function body (list of strings)
         inlineCCode = ""
         #Parameter is tuple of identifier and datatype, arg is a ast node
-        paramReplacementDict = {param[0]: arg.__repr__() for param, arg in zip(funcDecl.funcParams, arguments)}
-        
+        paramReplacementDict = {}        
+        for param, arg in zip(funcDecl.funcParams, arguments):
+            #Get the argument datatype
+            argType    = arg.evaluateExprType()
+            argValue   = arg.__repr__()
+            paramType  = param[1]
+            paramValue = param[0]
+            
+            #If the type doesn't match that of function parameters type, its an error
+            if(promoteType(argType, paramType, argValue, isArgumentType=True) < 0):
+                printError("InlineFuncError",
+                        f"Parameter's datatype ({argValue}:{evalTypeToString(argType)}) cannot be implicitly casted to argument ({paramValue}:{evalTypeToString(paramType)})"
+                        f" of inline function '{funcDecl.funcName}'")
+
+            #Type matches, add it to replacement dict
+            paramReplacementDict[paramValue] = argValue
+
         #funcBody -> List[Token]
         for token in funcDecl.funcBody:
             if(token.tokenType == TOKEN_COMMA):
@@ -538,7 +553,7 @@ class Parser:
         
         return self.statementList, self.instantiatedFuncs, self.globalSymbolTable
 
-    #var keyword | expr
+    #keywords | expr
     def parseStatement(self):
         tokenType = self.currentToken.tokenType
         statement = None
@@ -645,10 +660,8 @@ class Parser:
             operator = self.currentToken.tokenType
             self.advance()
 
-            #Every time we get minus, we invert this condition, if even number of minus, this condition will be false
             rightExpr = self.parseUnary()
 
-            #Return an UnaryOperationNode
             return UnaryOperationNode(operator, rightExpr)
         
         #Else we just return an Atom
@@ -657,7 +670,8 @@ class Parser:
     def parseCall(self):
         atom = self.parseAtom()
 
-        if(self.peekToken().tokenType == TOKEN_LPAREN):
+        #Check for proper function call if the current token is identifier and its next token is '('
+        if(self.currentToken.tokenType == TOKEN_IDENTIFIER and self.peekToken().tokenType == TOKEN_LPAREN):
             self.advance()
             #Function Template
             if(isinstance(atom, Token)):
@@ -716,7 +730,7 @@ class Parser:
                 printError("ParserError", "Expected closing ')'")
             self.advance()
 
-            return expr
+            return ParenthesizedNode(expr)
 
         #All of the other stuff is just error
         printError("ParserError", "Expected Primitive types or '()' expression")

@@ -17,6 +17,16 @@ class ValueNode:
     def evaluateExprType(self) -> int:
         return self.type
 
+class ParenthesizedNode:
+    def __init__(self, expr) -> None:
+        self.expr = expr
+    
+    def __repr__(self) -> str:
+        return f"({self.expr})"
+
+    def evaluateExprType(self) -> int:
+        return self.expr.evaluateExprType()
+
 class BinaryOperationNode:
     def __init__(self, leftExpr, operator, rightExpr) -> None:
         self.leftExpr  = leftExpr

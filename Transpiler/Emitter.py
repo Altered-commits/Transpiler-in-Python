@@ -246,6 +246,11 @@ class Emitter:
 
         elif isinstance(node, ValueNode):
             self.code += f"{node.value}"
+        
+        elif isinstance(node, ParenthesizedNode):
+            self.code += "("
+            self.emitExpression(node.expr)
+            self.code += ")"
 
         elif isinstance(node, VariableAccessNode):
             self.code += f"{node.variableName}"

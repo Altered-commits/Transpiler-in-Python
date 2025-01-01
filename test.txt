@@ -1,22 +1,8 @@
 include TLib.IODefs
-
-func do_print(a) {
-    print("Inside function loop: {} + {}\n", a, a + 1);
-}
-
-func my_function(a, b)
-{
-    for var i = a; i < b; i = i + 1 
-    {
-        do_print(i);
-    }
-}
-
-var c = --18000;
-var a = c -1 --8;
-var b = 0.0;
-
-input(a, b);
-
-my_function(a, b);
-my_function(1.5, 10.5);
+include TLib.MathDefs
+//Binary operators and Assignment operator
+var a = (10 + 20) / 30 * 40 % 'a';
+//Logical operators and Assignment operator
+var b = 10;
+var c = (a != b) and ((b >= a) or (b <= a)) and (a == b);
+print("Variable c Evaluated: {}, {}", c, factorial(100.0));
