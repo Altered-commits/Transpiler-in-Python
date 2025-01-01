@@ -40,7 +40,7 @@ class Lexer:
         calculatedOffset = self.curIndex + offset
         return calculatedOffset if calculatedOffset < self.textLen else self.textLen - 1
 
-    def peekToken(self) -> Token:
+    def peekToken(self, isExpr) -> Token:
         #Save the current state of the lexer
         savedIndex   = self.curIndex
         savedCurChar = self.curChar
@@ -48,7 +48,7 @@ class Lexer:
         savedCurCol  = self.curCol
         
         #Get the next token
-        nextToken = self.getToken()
+        nextToken = self.getToken(isExpr)
         
         #Restore the lexer state
         self.curIndex = savedIndex
@@ -185,7 +185,7 @@ class Lexer:
         stringLiteral += '"'
         return Token(stringLiteral, TOKEN_STRING)
 
-    def getToken(self) -> Token:
+    def getToken(self, isExpr) -> Token:
         while self.curChar != '\0':
             updateContext(self.curLine, self.curCol)
             self.skipSpaces()
@@ -194,8 +194,10 @@ class Lexer:
             if(self.curChar == '-'):
                 self.minusCount += 1
 
-                if(self.peekChar(1).isdigit() and self.minusCount > 2):
-                    return self.lexNumeric()
+                if(self.peekChar(1).isdigit() and (self.minusCount > 1 or not isExpr)):
+                    numericToken = self.lexNumeric()
+                    self.minusCount = 0
+                    return numericToken
                 
                 self.advance()
                 return Token("-", TOKEN_SUB)

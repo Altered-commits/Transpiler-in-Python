@@ -17,11 +17,11 @@ class TokenAdvancer:
         self.tCur = self.tList[self.tIdx] if self.tIdx < self.tLen else self.tEOF
     
     #Keeping the name same to have compatibility with lexer.getToken() or lexer.peekToken()
-    def peekToken(self):
+    def peekToken(self, _):
         #The reason why we dont do + 1 to tIdx is, its already ahead, as getToken() advances it before returning so its ahead one token
         return self.tList[self.tIdx] if self.tIdx < self.tLen else self.tEOF
 
-    def getToken(self):
+    def getToken(self, _):
         token = self.tCur
         self.advance()
         return token
