@@ -2,7 +2,7 @@ __c_include__ string.h
 
 include TLib.TranspilerDefs
 
-func<__inline_c__, string> stringLength(in: string) {
+func<__inline_c__, uint64> stringLength(in: string) {
     strlen(in)
 }
 

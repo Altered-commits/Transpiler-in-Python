@@ -6,7 +6,7 @@ define PI 3.14159
 define E  2.71828
 
 func<__inline_c__, double> factorial(x: double) {
-    tgamma(x + 1)
+    tgamma(x + 1.0)
 }
 
 func<__inline_c__, double> ceil(x: double) {

@@ -286,11 +286,11 @@ def promoteType(initialType, newType, identifier, isFunc = False, isArgumentType
 
         return EVAL_FLOAT32 if NTP <= categorizedTypePriority[EVAL_FLOAT32] else EVAL_FLOAT64
     
-    #(Unsigned to signed) and (Signed to unsigned) conversion is allowed, with at least the same bit width
-    if(initialType <= EVAL_UINT64 and newType >= EVAL_INT8) or (initialType >= EVAL_INT8 and newType <= EVAL_UINT64):
-        correspondingSignedType = uintToInt.get(initialType, EVAL_INT64)
-        return max(correspondingSignedType, newType, key=lambda t: categorizedTypePriority[t])
+    #Return greater type, aka give signed integer priority
+    if(ITP == NTP):
+        return max(initialType, newType)
     
+
     #Promote to larger bitwidth if necessary
     if(NTP > ITP):
         return newType

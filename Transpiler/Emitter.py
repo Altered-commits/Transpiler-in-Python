@@ -219,7 +219,7 @@ class Emitter:
                     else:
                         self.code += f"{self.getIndentation()}char {node.variableName}[{bufferSize}]"
                 else:
-                    printError("EmitterError", "Found other node instead of ValueNode for string")
+                    printError("EmitterError", "Found other nodes instead of ValueNode for string")
             
             #For other variables its normal initialization
             else:

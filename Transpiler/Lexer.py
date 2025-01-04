@@ -15,6 +15,7 @@ class Lexer:
     def __init__(self, sourceCode: str) -> None:
         self.text       = sourceCode
         self.textLen    = len(sourceCode)
+        #------------------
         self.curIndex   = 0
         self.curChar    = sourceCode[self.curIndex] if self.textLen > 0 else '\0'
         self.curLine    = 1
@@ -42,19 +43,21 @@ class Lexer:
 
     def peekToken(self, isExpr) -> Token:
         #Save the current state of the lexer
-        savedIndex   = self.curIndex
-        savedCurChar = self.curChar
-        savedCurLine = self.curLine
-        savedCurCol  = self.curCol
+        savedIndex      = self.curIndex
+        savedCurChar    = self.curChar
+        savedCurLine    = self.curLine
+        savedCurCol     = self.curCol
+        savedMinusCount = self.minusCount
         
         #Get the next token
         nextToken = self.getToken(isExpr)
         
         #Restore the lexer state
-        self.curIndex = savedIndex
-        self.curChar  = savedCurChar
-        self.curLine  = savedCurLine
-        self.curCol   = savedCurCol
+        self.curIndex   = savedIndex
+        self.curChar    = savedCurChar
+        self.curLine    = savedCurLine
+        self.curCol     = savedCurCol
+        self.minusCount = savedMinusCount
 
         return nextToken
 
@@ -95,7 +98,7 @@ class Lexer:
         
         lexedText = self.text[startPos : self.curIndex]
         tokenType = keywordToTokenType.get(lexedText, TOKEN_IDENTIFIER)
-        
+
         return Token(lexedText, tokenType)
 
     def lexChar(self) -> Token:
