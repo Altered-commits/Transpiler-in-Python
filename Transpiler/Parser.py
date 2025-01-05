@@ -38,6 +38,11 @@ class Parser:
     
     def advance(self, isExpr = True) -> None:
         self.currentToken = self.lexer.getToken(isExpr)
+    
+    def getSpacesAndAdvance(self, isExpr = True) -> str:
+        spaceStr          = self.lexer.getAndSkipSpaces()
+        self.currentToken = self.lexer.getToken(isExpr)
+        return spaceStr
 
     def peekToken(self, isExpr = True) -> Token:
         return self.lexer.peekToken(isExpr)
@@ -400,19 +405,19 @@ class Parser:
         #Advance past the '<' token
         self.advance()
 
-        #First token is always expected to be a __inline_c__ token no matter what
-        if(self.currentToken.tokenType != TOKEN_KEYWORD_INLINE_C):
-            printError("ParserError", "Expected '__inline_c__' keyword after '<', 'func<>' syntax not available for normal functions")
+        #First token is always expected to be a __inline_pure__ token no matter what
+        if(self.currentToken.tokenType != TOKEN_KEYWORD_INLINE_PURE):
+            printError("ParserError", "Expected '__inline_pure__' keyword after '<', 'func<>' syntax not available for normal functions")
         
         self.advance()
 
         while self.currentToken.tokenType != TOKEN_CMP_GT:
             if(self.currentToken.tokenType != TOKEN_COMMA):
-                printError("ParserError", "Expected ',' after '__inline_c__', or ending '>'")
+                printError("ParserError", "Expected ',' after '__inline_pure__', or ending '>'")
             self.advance(False)
 
             if(self.currentToken.tokenType != TOKEN_INT):
-                printError("ParserError", "Expected integer type to determine the '__inline_c__' functions builtin type")
+                printError("ParserError", "Expected integer type to determine the '__inline_pure__' functions builtin type")
             
             inlineParameters.append(int(self.currentToken.tokenValue))
             self.advance()
@@ -448,7 +453,7 @@ class Parser:
             self.advance()
 
             if(self.currentToken.tokenType != TOKEN_COLON):
-                printError("ParserError", "Expected ':' after parameter, '__inline_c__' func mandates type specifying")
+                printError("ParserError", "Expected ':' after parameter, '__inline_pure__' func mandates type specifying")
             self.advance()
 
             if(self.currentToken.tokenType != TOKEN_INT):
@@ -469,7 +474,7 @@ class Parser:
         #If we end function with ';' it means we expect transpiler to fill body for us
         if(self.currentToken.tokenType == TOKEN_SEMIC):
             if(len(inlineParameters) != 2):
-                printError("ParserError", "'__inline_c__' function with no body expects 3 inline paramters: '__inline_c__', 'builtin_type', 'return_type'")
+                printError("ParserError", "'__inline_pure__' function with no body expects 3 inline paramters: '__inline_pure__', 'builtin_type', 'return_type'")
             self.inlineFuncs[funcIdentifier] = FuncDeclNode(funcIdentifier, funcParams, None, inlineParameters[1],
                                                         True, hasVargs, inlineParameters[0])
             self.advance()
@@ -477,17 +482,27 @@ class Parser:
         #We have a body
         elif(self.currentToken.tokenType == TOKEN_LBRACE):
             if(len(inlineParameters) != 1):
-                printError("ParserError", "'__inline_c__' function with body expects 2 inline paramters: '__inline_c__', 'return_type'")            
+                printError("ParserError", "'__inline_pure__' function with body expects 2 inline paramters: '__inline_pure__', 'return_type'")            
 
             self.advance() #Advance past the '{'
-            funcBody = []
+            funcBody   = []
+            braceCount = 1
 
-            while self.currentToken.tokenType != TOKEN_EOF and self.currentToken.tokenType != TOKEN_RBRACE:
-                funcBody.append(self.currentToken)
-                self.advance()
+            while self.currentToken.tokenType != TOKEN_EOF and braceCount > 0:
+                if(self.currentToken.tokenType == TOKEN_LBRACE):
+                    braceCount += 1
+                elif(self.currentToken.tokenType == TOKEN_RBRACE):
+                    braceCount -= 1
+                    #All braces done, exit
+                    if(braceCount == 0):
+                        break
+                
+                #What we append is simple string values along with spaces, cuz those are necessary for proper indentation and stuff
+                funcBody.append(self.currentToken.tokenValue)
+                funcBody.append(self.getSpacesAndAdvance())
             
             if(self.currentToken.tokenType != TOKEN_RBRACE):
-                printError("ParserError", "Expected ending '}' for '__inline_c__' function body")
+                printError("ParserError", "Expected ending '}' for '__inline_pure__' function body")
             self.advance()
 
             self.inlineFuncs[funcIdentifier] = FuncDeclNode(funcIdentifier, funcParams, funcBody, inlineParameters[0],
@@ -495,7 +510,7 @@ class Parser:
 
         #Invalid syntax
         else:
-            printError("ParserError", "Expected either ';' or '{' after '__inline_c__' function declaration")
+            printError("ParserError", "Expected either ';' or '{' after '__inline_pure__' function declaration")
 
     def parseInlineCCall(self, funcDecl):
         arguments = self.parseListExpr()
@@ -513,7 +528,7 @@ class Parser:
 
         #Builtin stuff
         if(funcDecl.funcBody is None):
-            return InlineCFuncNode(builtinCFunc(funcDecl, arguments), funcDecl.returnType)
+            return InlinePureFuncNode(builtinCFunc(funcDecl, arguments), funcDecl.returnType)
 
         #Inline with function body (list of strings)
         inlineCCode = ""
@@ -535,14 +550,18 @@ class Parser:
             #Type matches, add it to replacement dict
             paramReplacementDict[paramValue] = argValue
 
-        #funcBody -> List[Token]
-        for token in funcDecl.funcBody:
-            if(token.tokenType == TOKEN_COMMA):
-                inlineCCode += ", "
-            else:
-                inlineCCode += paramReplacementDict.get(token.tokenValue, token.tokenValue)
+        #funcBody -> List[str]
+        funcBodyLen = len(funcDecl.funcBody)
+        for idx, stringTokens in enumerate(funcDecl.funcBody):
+            if(stringTokens == ''):
+                continue
+            #Only add the last newline if the last token before the newline is right brace, else just don't even add it
+            if(idx == funcBodyLen - 1 and funcDecl.funcBody[idx - 1] != '}'):
+                continue
+            #Replace tokens or add it as is to the inlineCCode
+            inlineCCode += paramReplacementDict.get(stringTokens, stringTokens)
 
-        return InlineCFuncNode(inlineCCode, funcDecl.returnType)
+        return InlinePureFuncNode(inlineCCode, funcDecl.returnType)
 
     #-----------PARSING METHODS DOWN BELOW-----------
     def parse(self):
@@ -677,7 +696,7 @@ class Parser:
             if(isinstance(atom, Token)):
                 return self.parseFuncCall(atom.tokenValue)
             
-            #Inline C
+            #Inline Pure
             elif(isinstance(atom, FuncDeclNode)):
                 return self.parseInlineCCall(atom)
             
@@ -705,7 +724,7 @@ class Parser:
             if(self.getFuncTemplateFromAnyScope(self.currentToken.tokenValue)):
                 return self.currentToken
 
-            #Inline c func
+            #Inline Pure func
             if(self.currentToken.tokenValue in self.inlineFuncs):
                 return self.inlineFuncs[self.currentToken.tokenValue]
             

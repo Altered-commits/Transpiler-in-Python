@@ -1,6 +1,6 @@
 # Transpiler in Python
 
-This Python transpiler converts custom language to C code. Made as a college project by two `2nd-year completed` individuals.
+This Python transpiler converts custom language to C code. Made as a college project by two individuals as a part of NTCC (After we completed 2nd year at our college)
 
 ## Features
 1. Preprocessor capable of handling `include` and `define` directives without the need for '#' symbol. Can access files within folders using '.' syntax. It also processes single line comments.
@@ -10,7 +10,7 @@ This Python transpiler converts custom language to C code. Made as a college pro
     - Arithmetic, Logical and Comparision operators.
     - if-elif-else condition.
     - for, while and do-while loops.
-    - user defined and built-in functions.
+    - user defined, pure inline and built-in functions.
 
 ## Usage
 

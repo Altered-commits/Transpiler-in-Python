@@ -266,7 +266,7 @@ def promoteType(initialType, newType, identifier, isFunc = False, isArgumentType
     ITC = typeCategory[initialType]
     NTC = typeCategory[newType]
     if(ITC == -1 or NTC == -1):
-        if(isArgumentType): #Used as implicit casting check for Inline C Code
+        if(isArgumentType): #Used as implicit casting check for Inline Pure Code
             return -1
         else:
             printError("TypePromotionError", f"Cannot promote to '{evalTypeToString(initialType if ITC == -1 else newType)}' type for identifier '{identifier}'")

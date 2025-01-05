@@ -27,6 +27,10 @@ class Emitter:
         #String repr to be written to file
         self.code             = ""
         self.indentationLevel = 0
+        #Replacement for 'string' type in C language
+        self.stringTypeReplacement = "const char*"
+        #Some statements / expressions don't need semicolons
+        self.forceNoSemicolon = False
         #Pre-cache some indentation levels
         self.identationCache  = {
             0: "",
@@ -55,6 +59,7 @@ class Emitter:
         return self.code
     
     def emitGlobalVars(self) -> None:
+        self.code += '\n//Global vars\n'
         for var in self.globalVars:
             self.emitVariableAssignment(var[1]) #[1] is the variable assign node itself
             self.code += ';\n'
@@ -66,9 +71,11 @@ class Emitter:
             self.emitFunction(func)
     
     def emitFunction(self, func) -> None:
-        self.code += f"{evalTypeToString(func.returnType)} {func.funcName}("
+        self.code += f"{self.stringTypeReplacement if func.returnType == EVAL_STRING else evalTypeToString(func.returnType)} "\
+                     f"{func.funcName}("
         #Parameters
-        self.code += ", ".join(f"{evalTypeToString(paramType)} {paramId}" for paramId, paramType in func.funcParams)
+        self.code += ", ".join(f"{self.stringTypeReplacement if paramType == EVAL_STRING else evalTypeToString(paramType)} {paramId}"\
+                                for paramId, paramType in func.funcParams)
         self.code += ")\n{\n"
         
         #Inc indentation
@@ -81,9 +88,10 @@ class Emitter:
         self.code += "}\n\n"
 
     def emitHeader(self) -> None:
+        #stdint is a must include header (As we always use int8, uint16, etc)
+        self.code += "#include <stdint.h>\n"
         for i in self.cIncludeFiles:
             self.code += f"#include <{i}>\n"
-        self.code += "#include <stdint.h>\n"
     
     def emitMainFunction(self) -> None:
         #Start of main function
@@ -107,7 +115,7 @@ class Emitter:
         #End of main function
         self.code += "\n    return 0;\n}"
 
-    def emitStatement(self, node, forceNoSemicolon = False) -> None:
+    def emitStatement(self, node) -> None:
         shouldEndWithSemic = False
         if(isinstance(node, VariableAssignNode)):
             shouldEndWithSemic = True
@@ -132,14 +140,17 @@ class Emitter:
             self.emitExpression(node.returnExpr)
         #Expression
         else:
-            shouldEndWithSemic = True
+            #If its a single Inline Pure Node, then don't add semicolon
+            shouldEndWithSemic = not isinstance(node, InlinePureFuncNode)
             self.code += self.getIndentation()
             self.emitExpression(node)
         
         #End statements for now in ';', later we will change this
-        if(shouldEndWithSemic and not forceNoSemicolon):
+        if(shouldEndWithSemic and not self.forceNoSemicolon):
             self.code += ";\n"
-        shouldEndWithSemic = False
+        
+        #Reset the state
+        self.forceNoSemicolon = False
     
     def emitBlock(self, block) -> None:
         self.code += " {\n"
@@ -184,7 +195,9 @@ class Emitter:
         oldIndentationLevel = self.indentationLevel
         self.indentationLevel = 0
 
-        self.emitStatement(node.forAssignment, True)
+        #We don't want any semicolon, we add it on our own
+        self.forceNoSemicolon = True
+        self.emitStatement(node.forAssignment)
         self.code += "; "
         self.emitExpression(node.forCondition)
         self.code += "; "
@@ -218,8 +231,19 @@ class Emitter:
                         self.code += f"{self.getIndentation()}char {node.variableName}[{stringLen - 1}] = {node.assignExpr}"
                     else:
                         self.code += f"{self.getIndentation()}char {node.variableName}[{bufferSize}]"
+                
+                #Or strings can come from a user defined function call
+                #Such string shall be const char* by default
+                elif(isinstance(node.assignExpr, FuncCallNode)):
+                    self.code += f"{self.getIndentation()}const char* {node.variableName} = {node.assignExpr}"
+
+                #Or strings can come from Inline Pure functions
+                elif(isinstance(node.assignExpr, InlinePureFuncNode)):
+                    self.forceNoSemicolon = True
+                    self.code += f"{self.getIndentation()}const char* {node.variableName} = {node.assignExpr.inlineCCode}"
+
                 else:
-                    printError("EmitterError", "Found other nodes instead of ValueNode for string")
+                    printError("EmitterError", f"Found incompatible nodes for string operations. Type: {type(node.assignExpr)}")
             
             #For other variables its normal initialization
             else:
@@ -231,7 +255,7 @@ class Emitter:
                 self.emitExpression(node.assignExpr)
     
     def emitExpression(self, node) -> None:
-        if(isinstance(node, InlineCFuncNode)):
+        if(isinstance(node, InlinePureFuncNode)):
             self.code += f"{node.inlineCCode}"
 
         elif isinstance(node, BinaryOperationNode):

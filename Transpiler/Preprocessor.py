@@ -23,13 +23,12 @@ class Preprocessor:
     def preprocessInternal(self, source) -> None:
         for line in source:
             line = self.removeComments(line)
-            strippedLine = line.strip(' \n')
 
-            if(strippedLine == ""):
+            if(line == ""):
                 continue
 
-            if(strippedLine.startswith('__c_include__')):
-                cIncludePath = strippedLine[14:].strip()
+            if(line.startswith('__c_include__')):
+                cIncludePath = line[14:].strip()
                 
                 if(cIncludePath in self.cIncludeFiles):
                     printWarning("PreprocessorWarning", f"'{filePath}' was already included before, ignoring this '__c_include__' directive")
@@ -37,8 +36,8 @@ class Preprocessor:
                     
                 self.cIncludeFiles.add(cIncludePath)
             
-            elif(strippedLine.startswith("include")):
-                includePath = strippedLine[8:].strip()
+            elif(line.startswith("include")):
+                includePath = line[8:].strip()
                 filePath    = includePath.replace('.', '/') + ".txt"
 
                 if filePath in self.includedFiles:
@@ -55,8 +54,8 @@ class Preprocessor:
                 except FileNotFoundError:
                     printPreprocessorError(f"File not found for 'include' directive: {filePath}")
 
-            elif(strippedLine.startswith("define")):
-                parts = strippedLine.split(maxsplit=2)
+            elif(line.startswith("define")):
+                parts = line.split(maxsplit=2)
                 
                 if(len(parts) < 3):
                     printPreprocessorError("expected key and value after 'define' directive, with space")
@@ -70,10 +69,10 @@ class Preprocessor:
                 self.macros[key] = val
             
             else:
-                self.preprocessLine(strippedLine)
+                self.preprocessLine(line)
 
     def preprocessLine(self, line) -> None:
-        self.outputString += self.expandMacros(line) + '\n'
+        self.outputString += self.expandMacros(line)
 
     def expandMacros(self, value) -> str:
         result = []

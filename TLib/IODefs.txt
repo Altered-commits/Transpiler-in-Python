@@ -7,6 +7,6 @@ define __inline_scanf__  1
 define __inline_fgets__  2
 
 //All of these functions are built-in, their body is generated while compiling the code
-func<__inline_c__, __inline_printf__, int32>  print(fmt: string, ...);
-func<__inline_c__, __inline_scanf__,  int32>  input(...);
-func<__inline_c__, __inline_fgets__,  string> stringInput(...);
+func<__inline_pure__, __inline_printf__, int32>  print(fmt: string, ...);
+func<__inline_pure__, __inline_scanf__,  int32>  input(...);
+func<__inline_pure__, __inline_fgets__,  string> stringInput(...);

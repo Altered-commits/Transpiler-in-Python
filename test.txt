@@ -1,2 +1,27 @@
-var b = 0;
-var a = b --1;
+include TLib.IODefs
+include TLib.MathDefs
+
+global var i  = 0;
+global var r  = 5;
+global var ic = 1;
+
+func<__inline_pure__, void> _My_for_loop(_i: int32, _range: int32, _inc: int32)
+{
+    for(int i = _i; i < _range; i = i + _inc)
+    {
+        printf("%d\n", i);
+    }
+}
+
+func<__inline_pure__, int32> _My_pure_adder(a: int32, b: int32)
+{
+    a + b
+}
+
+func _My_func()
+{
+    var __inc = _My_pure_adder(ic, abs(ceil(-2.13))) + 2;
+    _My_for_loop(i, r, __inc);
+}
+
+_My_func();

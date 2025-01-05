@@ -61,6 +61,14 @@ class Lexer:
 
         return nextToken
 
+    def getAndSkipSpaces(self) -> str:
+        spaceStr = ""
+        while (self.curChar in ' \t\n\r'):
+            spaceStr += self.curChar
+            self.advance()
+
+        return spaceStr
+
     def skipSpaces(self) -> None:
         while (self.curChar in ' \t\n\r'):
             self.advance()

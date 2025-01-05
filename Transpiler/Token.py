@@ -32,8 +32,10 @@ TOKEN_LPAREN   = 52
 TOKEN_RPAREN   = 53
 TOKEN_LBRACE   = 54
 TOKEN_RBRACE   = 55
-TOKEN_COMMA    = 56
-TOKEN_ELLIPSIS = 58
+TOKEN_LSQBRCKT = 56
+TOKEN_RSQBRCKT = 57
+TOKEN_COMMA    = 58
+TOKEN_ELLIPSIS = 59
 
 #Keywords (Identification starts from '60')
 TOKEN_KEYWORD_VAR = 60
@@ -50,7 +52,7 @@ TOKEN_KEYWORD_ELSE     = 69
 TOKEN_KEYWORD_WHILE    = 70
 TOKEN_KEYWORD_FOR      = 71
 TOKEN_KEYWORD_FUNC     = 72
-TOKEN_KEYWORD_INLINE_C = 73
+TOKEN_KEYWORD_INLINE_PURE = 73
 
 #END OF FILE
 TOKEN_EOF = 200
@@ -89,6 +91,8 @@ operatorToTokenType = {
     ")": TOKEN_RPAREN,
     "{": TOKEN_LBRACE,
     "}": TOKEN_RBRACE,
+    "[": TOKEN_LSQBRCKT,
+    "]": TOKEN_RSQBRCKT,
     ",": TOKEN_COMMA,
 
     #We have reached end of file, lexed all of it
@@ -130,7 +134,7 @@ keywordToTokenType = {
     "return": TOKEN_KEYWORD_RETURN,
     "global": TOKEN_KEYWORD_GLOBAL,
 
-    "__inline_c__": TOKEN_KEYWORD_INLINE_C
+    "__inline_pure__": TOKEN_KEYWORD_INLINE_PURE
 }
 
 '''

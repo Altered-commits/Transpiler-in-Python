@@ -6,7 +6,7 @@ import argparse
 import time 
 
 transpilerArgs = argparse.ArgumentParser(description="Transpile the given file into C Code")
-transpilerArgs.add_argument("filename", help="Name of the file to be transpiled. [ext -> .txt]")
+transpilerArgs.add_argument("filename", help="Name of the file to be transpiled. [file ext -> .txt]")
 
 args = transpilerArgs.parse_args()
 

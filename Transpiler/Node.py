@@ -48,7 +48,7 @@ class UnaryOperationNode:
         self.rightExpr = rightExpr
     
     def __repr__(self) -> str:
-        return f"({tokenOperatorsToString.get(self.operator)} {self.rightExpr})"
+        return f"({tokenOperatorsToString.get(self.operator)}{self.rightExpr})"
     
     def evaluateExprType(self) -> int:
         rightExprType = self.rightExpr
@@ -190,7 +190,7 @@ class FuncDeclNode:
         self.funcParams       = funcParams #List of tuples[identifier, type] if normal function definition
         self.funcBody         = funcBody
         self.returnType       = returnType
-        #Extra params for inline c functions
+        #Extra params for Inline Pure functions
         self.isInlineC        = isInlineC
         self.hasVargs         = hasVargs
         self.isBuiltinInlineC = isBuiltinInlineC
@@ -202,7 +202,7 @@ class FuncDeclNode:
     def evaluateExprType(self) -> int:
         raise NotImplementedError("No impl for func decl node")
 
-class InlineCFuncNode:
+class InlinePureFuncNode:
     def __init__(self, inlineCCode, returnType) -> None:
         self.inlineCCode = inlineCCode
         self.returnType  = returnType
