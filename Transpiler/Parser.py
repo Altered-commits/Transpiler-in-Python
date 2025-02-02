@@ -528,7 +528,7 @@ class Parser:
 
         #Builtin stuff
         if(funcDecl.funcBody is None):
-            return InlinePureFuncNode(builtinCFunc(funcDecl, arguments), funcDecl.returnType)
+            return InlinePureFuncNode(builtinCFunc(funcDecl, arguments), funcDecl.returnType, True)
 
         #Inline with function body (list of strings)
         inlineCCode = ""

@@ -59,10 +59,11 @@ class Emitter:
         return self.code
     
     def emitGlobalVars(self) -> None:
-        self.code += '\n//Global vars\n'
-        for var in self.globalVars:
-            self.emitVariableAssignment(var[1]) #[1] is the variable assign node itself
-            self.code += ';\n'
+        if self.globalVars:
+            self.code += '\n//Global vars\n'
+            for var in self.globalVars:
+                self.emitVariableAssignment(var[1]) #[1] is the variable assign node itself
+                self.code += ';\n'
         
         self.code += '\n'
 
@@ -141,7 +142,7 @@ class Emitter:
         #Expression
         else:
             #If its a single Inline Pure Node, then don't add semicolon
-            shouldEndWithSemic = not isinstance(node, InlinePureFuncNode)
+            shouldEndWithSemic = node.isBuiltinGenerated if isinstance(node, InlinePureFuncNode) else True
             self.code += self.getIndentation()
             self.emitExpression(node)
         

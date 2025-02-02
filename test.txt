@@ -15,7 +15,7 @@ func<__inline_pure__, void> _My_for_loop(_i: int32, _range: int32, _inc: int32)
 
 func<__inline_pure__, int32> _My_pure_adder(a: int32, b: int32)
 {
-    a + b
+    ((a) + (b))
 }
 
 func _My_func()

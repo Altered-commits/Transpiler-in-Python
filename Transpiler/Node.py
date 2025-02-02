@@ -203,9 +203,10 @@ class FuncDeclNode:
         raise NotImplementedError("No impl for func decl node")
 
 class InlinePureFuncNode:
-    def __init__(self, inlineCCode, returnType) -> None:
-        self.inlineCCode = inlineCCode
-        self.returnType  = returnType
+    def __init__(self, inlineCCode, returnType, isBuiltinGenerated = False) -> None:
+        self.inlineCCode        = inlineCCode
+        self.returnType         = returnType
+        self.isBuiltinGenerated = isBuiltinGenerated
     
     def __repr__(self) -> str:
         return self.inlineCCode
